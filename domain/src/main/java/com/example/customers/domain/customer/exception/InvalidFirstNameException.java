@@ -1,4 +1,6 @@
 package com.example.customers.domain.customer.exception;
 
-public class InvalidFirstNameException extends RuntimeException {
+import com.example.customers.domain.exception.DomainValidationException;
+
+public class InvalidFirstNameException extends DomainValidationException {
 }

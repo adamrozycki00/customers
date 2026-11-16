@@ -1,4 +1,6 @@
 package com.example.customers.domain.genericfield.exception;
 
-public class InvalidFieldNameException extends RuntimeException {
+import com.example.customers.domain.exception.DomainValidationException;
+
+public class InvalidFieldNameException extends DomainValidationException {
 }

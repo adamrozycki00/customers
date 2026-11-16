@@ -1,4 +1,6 @@
 package com.example.customers.domain.tenant.exception;
 
-public class InvalidTenantIdException extends RuntimeException {
+import com.example.customers.domain.exception.DomainValidationException;
+
+public class InvalidTenantIdException extends DomainValidationException {
 }

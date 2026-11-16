@@ -1,4 +1,6 @@
 package com.example.customers.domain.customer.exception;
 
-public class InvalidPublicIdException extends RuntimeException {
+import com.example.customers.domain.exception.DomainValidationException;
+
+public class InvalidPublicIdException extends DomainValidationException {
 }

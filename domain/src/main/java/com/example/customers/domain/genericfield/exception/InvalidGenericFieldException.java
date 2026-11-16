@@ -1,4 +1,6 @@
 package com.example.customers.domain.genericfield.exception;
 
-public class InvalidGenericFieldException extends RuntimeException {
+import com.example.customers.domain.exception.DomainValidationException;
+
+public class InvalidGenericFieldException extends DomainValidationException {
 }

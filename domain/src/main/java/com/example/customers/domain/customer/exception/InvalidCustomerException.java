@@ -1,4 +1,6 @@
 package com.example.customers.domain.customer.exception;
 
-public class InvalidCustomerException extends RuntimeException {
+import com.example.customers.domain.exception.DomainValidationException;
+
+public class InvalidCustomerException extends DomainValidationException {
 }
