@@ -10,8 +10,4 @@ import java.util.List;
 public class InvalidGenericFieldValuesException extends RuntimeException {
 
   private final List<String> invalidFieldNames;
-
-  public InvalidGenericFieldValuesException(String invalidFieldName) {
-    this.invalidFieldNames = List.of(invalidFieldName);
-  }
 }
