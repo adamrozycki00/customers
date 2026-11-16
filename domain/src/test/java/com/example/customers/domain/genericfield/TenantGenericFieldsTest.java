@@ -1,0 +1,83 @@
+package com.example.customers.domain.genericfield;
+
+import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
+import com.example.customers.domain.genericfield.value.BooleanValue;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+
+class TenantGenericFieldsTest {
+
+  private final GenericField registeredField = new GenericField(new FieldName("vip"), FieldType.BOOLEAN);
+  private final List<GenericField> registeredFields = List.of(registeredField);
+  private final TenantGenericFields tenantGenericFields = TenantGenericFields.of(registeredFields);
+
+  @Test
+  void shouldAcceptValueOfRegisteredField() {
+    var inputValueOfRegisteredField = Map.of("vip", true);
+    var expectedValues = Map.of(new FieldName("vip"), new BooleanValue(true));
+
+    var resultValues = tenantGenericFields.toTypedValues(inputValueOfRegisteredField);
+
+    assertThat(resultValues).isEqualTo(expectedValues);
+  }
+
+  @Test
+  void shouldRejectUnknownField() {
+    var inputValueOfUnknownField = Map.of("vipp", true);
+    var expectedInvalidFieldNames = List.of("vipp");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> tenantGenericFields.toTypedValues(inputValueOfUnknownField));
+
+    assertThat(thrown)
+        .extracting(InvalidGenericFieldValuesException::getInvalidFieldNames)
+        .isEqualTo(expectedInvalidFieldNames);
+  }
+
+  @Test
+  void shouldRejectValueOfWrongType() {
+    var inputValueOfWrongType = Map.of("vip", "yes");
+    var expectedInvalidFieldNames = List.of("vip");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> tenantGenericFields.toTypedValues(inputValueOfWrongType));
+
+    assertThat(thrown)
+        .extracting(InvalidGenericFieldValuesException::getInvalidFieldNames)
+        .isEqualTo(expectedInvalidFieldNames);
+  }
+
+  @Test
+  void shouldRejectInvalidFieldName() {
+    var inputValueOfInvalidFieldName = Map.of("date.of.birth", "1990-05-20T00:00:00Z");
+    var expectedInvalidFieldNames = List.of("date.of.birth");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> tenantGenericFields.toTypedValues(inputValueOfInvalidFieldName));
+
+    assertThat(thrown)
+        .extracting(InvalidGenericFieldValuesException::getInvalidFieldNames)
+        .isEqualTo(expectedInvalidFieldNames);
+  }
+
+  @Test
+  void shouldReportAllInvalidFieldNames() {
+    var inputValuesOfSeveralInvalidFields = Map.of("vipp", true, "vip", "yes");
+    var expectedInvalidFieldNames = List.of("vipp", "vip");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> tenantGenericFields.toTypedValues(inputValuesOfSeveralInvalidFields));
+
+    assertThat(thrown).isNotNull();
+    assertThat(thrown.getInvalidFieldNames()).containsExactlyInAnyOrderElementsOf(expectedInvalidFieldNames);
+  }
+}
