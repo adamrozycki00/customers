@@ -71,7 +71,8 @@ public enum FieldType {
 
   private static DatetimeValue parseDatetime(Object rawValue) {
     if (rawValue instanceof String datetimeText) {
-      return new DatetimeValue(toInstant(datetimeText));
+      var instant = toInstant(datetimeText);
+      return new DatetimeValue(instant);
     }
 
     throw new InvalidGenericFieldValueException();
@@ -79,7 +80,8 @@ public enum FieldType {
 
   private static Instant toInstant(String datetimeText) {
     try {
-      return Instant.from(ISO_DATETIME_DEFAULTING_TO_UTC.parse(datetimeText));
+      var parsedDatetime = ISO_DATETIME_DEFAULTING_TO_UTC.parse(datetimeText);
+      return Instant.from(parsedDatetime);
     } catch (DateTimeException e) {
       throw new InvalidGenericFieldValueException();
     }
@@ -93,8 +95,9 @@ public enum FieldType {
 
   private static FieldType findByName(String rawType) {
     String upperCaseType = rawType.toUpperCase(Locale.ROOT);
+    var allTypes = values();
 
-    return stream(values())
+    return stream(allTypes)
         .filter(type -> type.name().equals(upperCaseType))
         .findFirst()
         .orElseThrow(InvalidFieldTypeException::new);

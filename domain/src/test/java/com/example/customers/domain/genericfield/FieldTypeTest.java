@@ -210,7 +210,8 @@ class FieldTypeTest {
     @Test
     void shouldParseUtcDatetime() {
       String inputUtcDatetime = "2026-11-16T10:00:00Z";
-      var expectedValue = new DatetimeValue(Instant.parse("2026-11-16T10:00:00Z"));
+      var expectedInstant = Instant.parse("2026-11-16T10:00:00Z");
+      var expectedValue = new DatetimeValue(expectedInstant);
 
       var resultValue = FieldType.DATETIME.parse(inputUtcDatetime);
 
@@ -220,7 +221,8 @@ class FieldTypeTest {
     @Test
     void shouldParseDatetimeWithoutOffsetAsUtc() {
       String inputDatetimeWithoutOffset = "2026-11-16T10:00:00";
-      var expectedValue = new DatetimeValue(Instant.parse("2026-11-16T10:00:00Z"));
+      var expectedInstant = Instant.parse("2026-11-16T10:00:00Z");
+      var expectedValue = new DatetimeValue(expectedInstant);
 
       var resultValue = FieldType.DATETIME.parse(inputDatetimeWithoutOffset);
 
@@ -230,7 +232,8 @@ class FieldTypeTest {
     @Test
     void shouldConvertOffsetToUtc() {
       String inputDatetimeWithOffset = "2026-11-16T12:00:00+02:00";
-      var expectedValue = new DatetimeValue(Instant.parse("2026-11-16T10:00:00Z"));
+      var expectedInstant = Instant.parse("2026-11-16T10:00:00Z");
+      var expectedValue = new DatetimeValue(expectedInstant);
 
       var resultValue = FieldType.DATETIME.parse(inputDatetimeWithOffset);
 
