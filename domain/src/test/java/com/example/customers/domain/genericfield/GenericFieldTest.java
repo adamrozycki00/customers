@@ -1,6 +1,8 @@
 package com.example.customers.domain.genericfield;
 
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldException;
+import com.example.customers.domain.tenant.TenantId;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,23 +10,109 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 class GenericFieldTest {
 
-  @Test
-  void shouldRejectNullName() {
-    FieldName inputNullName = null;
-    var inputValidType = FieldType.BOOLEAN;
+  private final TenantId validTenantId = new TenantId("flowers");
+  private final FieldName validName = new FieldName("vip");
 
-    var thrown = catchThrowable(() -> new GenericField(inputNullName, inputValidType));
+  @Nested
+  class Equality {
 
-    assertThat(thrown).isInstanceOf(InvalidGenericFieldException.class);
+    @Test
+    void shouldBeEqualWhenIdsAreEqual() {
+      var booleanField = GenericField.builder()
+          .tenantId(validTenantId)
+          .name(validName)
+          .type(FieldType.BOOLEAN)
+          .build();
+      var sameFieldWithOtherType = GenericField.builder()
+          .tenantId(validTenantId)
+          .name(validName)
+          .type(FieldType.STRING)
+          .build();
+
+      var resultEquality = booleanField.equals(sameFieldWithOtherType);
+
+      assertThat(resultEquality).isTrue();
+    }
+
+    @Test
+    void shouldNotBeEqualWhenNamesDiffer() {
+      var otherName = new FieldName("score");
+      var field = GenericField.builder()
+          .tenantId(validTenantId)
+          .name(validName)
+          .type(FieldType.BOOLEAN)
+          .build();
+      var otherField = GenericField.builder()
+          .tenantId(validTenantId)
+          .name(otherName)
+          .type(FieldType.BOOLEAN)
+          .build();
+
+      var resultEquality = field.equals(otherField);
+
+      assertThat(resultEquality).isFalse();
+    }
+
+    @Test
+    void shouldNotBeEqualWhenTenantIdsDiffer() {
+      var otherTenantId = new TenantId("roses");
+      var field = GenericField.builder()
+          .tenantId(validTenantId)
+          .name(validName)
+          .type(FieldType.BOOLEAN)
+          .build();
+      var otherTenantsField = GenericField.builder()
+          .tenantId(otherTenantId)
+          .name(validName)
+          .type(FieldType.BOOLEAN)
+          .build();
+
+      var resultEquality = field.equals(otherTenantsField);
+
+      assertThat(resultEquality).isFalse();
+    }
   }
 
-  @Test
-  void shouldRejectNullType() {
-    var inputValidName = new FieldName("vip");
-    FieldType inputNullType = null;
+  @Nested
+  class InvalidGenericFields {
 
-    var thrown = catchThrowable(() -> new GenericField(inputValidName, inputNullType));
+    @Test
+    void shouldRejectMissingTenantId() {
+      TenantId inputMissingTenantId = null;
 
-    assertThat(thrown).isInstanceOf(InvalidGenericFieldException.class);
+      var thrown = catchThrowable(() -> GenericField.builder()
+          .tenantId(inputMissingTenantId)
+          .name(validName)
+          .type(FieldType.BOOLEAN)
+          .build());
+
+      assertThat(thrown).isInstanceOf(InvalidGenericFieldException.class);
+    }
+
+    @Test
+    void shouldRejectNullName() {
+      FieldName inputNullName = null;
+
+      var thrown = catchThrowable(() -> GenericField.builder()
+          .tenantId(validTenantId)
+          .name(inputNullName)
+          .type(FieldType.BOOLEAN)
+          .build());
+
+      assertThat(thrown).isInstanceOf(InvalidGenericFieldException.class);
+    }
+
+    @Test
+    void shouldRejectNullType() {
+      FieldType inputNullType = null;
+
+      var thrown = catchThrowable(() -> GenericField.builder()
+          .tenantId(validTenantId)
+          .name(validName)
+          .type(inputNullType)
+          .build());
+
+      assertThat(thrown).isInstanceOf(InvalidGenericFieldException.class);
+    }
   }
 }

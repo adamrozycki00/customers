@@ -50,12 +50,12 @@ public final class TenantGenericFields {
 
   private GenericFieldValue toTypedValue(FieldName name, Object rawValue) {
     var field = findByName(name).orElseThrow(InvalidGenericFieldValueException::new);
-    return field.type().parse(rawValue);
+    return field.getType().parse(rawValue);
   }
 
   private Optional<GenericField> findByName(FieldName name) {
     return fields.stream()
-        .filter(field -> field.name().equals(name))
+        .filter(field -> field.getName().equals(name))
         .findFirst();
   }
 }

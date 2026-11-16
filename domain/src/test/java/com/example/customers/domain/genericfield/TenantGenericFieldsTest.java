@@ -2,6 +2,7 @@ package com.example.customers.domain.genericfield;
 
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import com.example.customers.domain.genericfield.value.BooleanValue;
+import com.example.customers.domain.tenant.TenantId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,7 +13,13 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 class TenantGenericFieldsTest {
 
-  private final GenericField registeredField = new GenericField(new FieldName("vip"), FieldType.BOOLEAN);
+  private final TenantId tenantId = new TenantId("flowers");
+  private final FieldName registeredFieldName = new FieldName("vip");
+  private final GenericField registeredField = GenericField.builder()
+      .tenantId(tenantId)
+      .name(registeredFieldName)
+      .type(FieldType.BOOLEAN)
+      .build();
   private final List<GenericField> registeredFields = List.of(registeredField);
   private final TenantGenericFields tenantGenericFields = TenantGenericFields.of(registeredFields);
 
