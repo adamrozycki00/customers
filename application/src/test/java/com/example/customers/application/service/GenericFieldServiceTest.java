@@ -11,10 +11,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class RegisterGenericFieldServiceTest {
+class GenericFieldServiceTest {
 
   private final InMemoryGenericFieldDbAdapter repo = new InMemoryGenericFieldDbAdapter();
-  private final RegisterGenericFieldUseCase underTest = new RegisterGenericFieldService(repo);
+
+  private final RegisterGenericFieldUseCase underTest = new GenericFieldService(repo);
 
   @Test
   void shouldReturnRegisteredField() {

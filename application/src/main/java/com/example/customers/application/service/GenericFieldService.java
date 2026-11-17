@@ -9,7 +9,7 @@ import com.example.customers.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class RegisterGenericFieldService implements RegisterGenericFieldUseCase {
+public class GenericFieldService implements RegisterGenericFieldUseCase {
 
   private final GenericFieldPort genericFieldPort;
 
