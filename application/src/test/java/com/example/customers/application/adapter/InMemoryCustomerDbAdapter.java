@@ -2,7 +2,7 @@ package com.example.customers.application.adapter;
 
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.CustomerUpdate;
-import com.example.customers.application.port.FieldChange;
+import com.example.customers.application.port.FieldUpdate;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
@@ -63,8 +63,8 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
     }
 
     var current = storedCustomer.get();
-    var firstName = apply(update.firstName(), current.getFirstName());
-    var lastName = apply(update.lastName(), current.getLastName());
+    var firstName = getUpdatedField(update.firstName(), current.getFirstName());
+    var lastName = getUpdatedField(update.lastName(), current.getLastName());
     Map<FieldName, GenericFieldValue> genericFields = new LinkedHashMap<>(current.getGenericFields());
     genericFields.putAll(update.genericFieldsToSet());
     genericFields.keySet().removeAll(update.genericFieldsToClear());
@@ -81,11 +81,11 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
     return Optional.of(updatedCustomer);
   }
 
-  private static <T> T apply(FieldChange<T> change, T currentValue) {
-    return switch (change) {
-      case FieldChange.Keep<T> keep -> currentValue;
-      case FieldChange.Replace<T> replace -> replace.value();
-      case FieldChange.Clear<T> clear -> null;
+  private static <T> T getUpdatedField(FieldUpdate<T> fieldUpdate, T currentValue) {
+    return switch (fieldUpdate) {
+      case FieldUpdate.Keep<T> _ -> currentValue;
+      case FieldUpdate.Replace<T> replace -> replace.value();
+      case FieldUpdate.Clear<T> _ -> null;
     };
   }
 

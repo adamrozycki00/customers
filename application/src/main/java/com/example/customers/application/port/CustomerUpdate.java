@@ -11,8 +11,8 @@ import java.util.Set;
 
 @Builder
 public record CustomerUpdate(
-    FieldChange<FirstName> firstName,
-    FieldChange<LastName> lastName,
+    FieldUpdate<FirstName> firstName,
+    FieldUpdate<LastName> lastName,
     Map<FieldName, GenericFieldValue> genericFieldsToSet,
     Set<FieldName> genericFieldsToClear) {
 }

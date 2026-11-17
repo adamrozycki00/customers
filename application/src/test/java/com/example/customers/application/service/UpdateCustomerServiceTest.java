@@ -239,6 +239,30 @@ class UpdateCustomerServiceTest {
     assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
   }
 
+  @Test
+  void shouldReportInvalidFieldNamesFromSetAndClearTogether() {
+    registerVipField();
+    storeCustomer();
+    Set<String> unregisteredFieldsMask = Set.of("genericFields.vipp", "genericFields.ghost");
+    Map<String, Object> inputSettingAndClearingUnregisteredFields = new HashMap<>();
+    inputSettingAndClearingUnregisteredFields.put("vipp", true);
+    inputSettingAndClearingUnregisteredFields.put("ghost", null);
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(unregisteredFieldsMask)
+        .genericFields(inputSettingAndClearingUnregisteredFields)
+        .build();
+    var expectedInvalidFieldNames = List.of("vipp", "ghost");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> underTest.update(inputCommand));
+
+    assertThat(thrown).isNotNull();
+    assertThat(thrown.getInvalidFieldNames()).containsExactlyInAnyOrderElementsOf(expectedInvalidFieldNames);
+  }
+
   private void registerVipField() {
     var vipField = GenericField.builder()
         .tenantId(tenantId)
