@@ -263,6 +263,28 @@ class UpdateCustomerServiceTest {
     assertThat(thrown.getInvalidFieldNames()).containsExactlyInAnyOrderElementsOf(expectedInvalidFieldNames);
   }
 
+  @Test
+  void shouldTreatMissingFieldMaskAsEmpty() {
+    storeCustomer();
+    Set<String> missingFieldMask = null;
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(missingFieldMask)
+        .firstName("Maria")
+        .build();
+    var expectedCustomer = Customer.builder()
+        .tenantId(tenantId)
+        .publicId(publicId)
+        .firstName(storedFirstName)
+        .lastName(storedLastName)
+        .build();
+
+    var resultCustomer = underTest.update(inputCommand);
+
+    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
   private void registerVipField() {
     var vipField = GenericField.builder()
         .tenantId(tenantId)

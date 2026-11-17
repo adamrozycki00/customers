@@ -6,6 +6,9 @@ import lombok.Builder;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Collections.emptySet;
+import static java.util.Objects.nonNull;
+
 public interface UpdateCustomerUseCase {
 
   Customer update(Command command);
@@ -18,5 +21,9 @@ public interface UpdateCustomerUseCase {
       String firstName,
       String lastName,
       Map<String, Object> genericFields) {
+
+    public Command {
+      fieldMask = nonNull(fieldMask) ? fieldMask : emptySet();
+    }
   }
 }
