@@ -2,113 +2,151 @@ package com.example.customers.application.service;
 
 import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
-import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.CreateCustomerUseCase.Command;
+import com.example.customers.application.port.in.GetCustomerUseCase.Query;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.exception.CustomerNotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 class CustomerServiceTest {
 
   private final InMemoryCustomerDbAdapter customerRepo = new InMemoryCustomerDbAdapter();
   private final InMemoryGenericFieldDbAdapter genericFieldRepo = new InMemoryGenericFieldDbAdapter();
 
-  private final CreateCustomerUseCase underTest = new CustomerService(customerRepo, genericFieldRepo);
+  private final CustomerService underTest = new CustomerService(customerRepo, genericFieldRepo);
 
-  @Test
-  void shouldReturnCreatedCustomer() {
-    var tenantId = new TenantId("flowers");
-    var vipName = new FieldName("vip");
-    var vipField = GenericField.builder()
-        .tenantId(tenantId)
-        .name(vipName)
-        .type(FieldType.BOOLEAN)
-        .build();
-    genericFieldRepo.insert(vipField);
-    Map<String, Object> inputGenericFields = Map.of("vip", true);
-    var inputCommand = Command.builder()
-        .tenantId("flowers")
-        .publicId("CUST-1")
-        .firstName("Anna")
-        .lastName("Smith")
-        .genericFields(inputGenericFields)
-        .build();
-    var expectedPublicId = new PublicId("CUST-1");
-    var expectedFirstName = new FirstName("Anna");
-    var expectedLastName = new LastName("Smith");
-    var expectedVipValue = new BooleanValue(true);
-    Map<FieldName, GenericFieldValue> expectedGenericFields = Map.of(vipName, expectedVipValue);
-    var expectedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .publicId(expectedPublicId)
-        .firstName(expectedFirstName)
-        .lastName(expectedLastName)
-        .genericFields(expectedGenericFields)
-        .build();
+  @Nested
+  class CreateCustomer {
 
-    var resultCustomer = underTest.create(inputCommand);
+    @Test
+    void shouldReturnCreatedCustomer() {
+      var tenantId = new TenantId("flowers");
+      var vipName = new FieldName("vip");
+      var vipField = GenericField.builder()
+          .tenantId(tenantId)
+          .name(vipName)
+          .type(FieldType.BOOLEAN)
+          .build();
+      genericFieldRepo.insert(vipField);
+      Map<String, Object> inputGenericFields = Map.of("vip", true);
+      var inputCommand = Command.builder()
+          .tenantId("flowers")
+          .publicId("CUST-1")
+          .firstName("Anna")
+          .lastName("Smith")
+          .genericFields(inputGenericFields)
+          .build();
+      var expectedPublicId = new PublicId("CUST-1");
+      var expectedFirstName = new FirstName("Anna");
+      var expectedLastName = new LastName("Smith");
+      var expectedVipValue = new BooleanValue(true);
+      Map<FieldName, GenericFieldValue> expectedGenericFields = Map.of(vipName, expectedVipValue);
+      var expectedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(expectedPublicId)
+          .firstName(expectedFirstName)
+          .lastName(expectedLastName)
+          .genericFields(expectedGenericFields)
+          .build();
 
-    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+      var resultCustomer = underTest.create(inputCommand);
+
+      assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+    }
+
+    @Test
+    void shouldStoreCreatedCustomer() {
+      Map<String, Object> noGenericFields = emptyMap();
+      var inputCommand = Command.builder()
+          .tenantId("flowers")
+          .publicId("CUST-1")
+          .firstName("Anna")
+          .lastName("Smith")
+          .genericFields(noGenericFields)
+          .build();
+      var tenantId = new TenantId("flowers");
+      var publicId = new PublicId("CUST-1");
+
+      underTest.create(inputCommand);
+
+      var resultStoredCustomer = customerRepo.find(tenantId, publicId);
+      assertThat(resultStoredCustomer).isPresent();
+    }
+
+    @Test
+    void shouldCreateCustomerWithoutNames() {
+      Map<String, Object> noGenericFields = emptyMap();
+      var inputCommandWithoutNames = Command.builder()
+          .tenantId("flowers")
+          .publicId("CUST-1")
+          .genericFields(noGenericFields)
+          .build();
+
+      var resultCustomer = underTest.create(inputCommandWithoutNames);
+
+      assertThat(resultCustomer.getFirstName()).isNull();
+      assertThat(resultCustomer.getLastName()).isNull();
+    }
+
+    @Test
+    void shouldCreateCustomerWithoutGenericFields() {
+      Map<String, Object> inputMissingGenericFields = null;
+      var inputCommandWithoutGenericFields = Command.builder()
+          .tenantId("flowers")
+          .publicId("CUST-1")
+          .genericFields(inputMissingGenericFields)
+          .build();
+
+      var resultCustomer = underTest.create(inputCommandWithoutGenericFields);
+
+      assertThat(resultCustomer.getGenericFields()).isEmpty();
+    }
   }
 
-  @Test
-  void shouldStoreCreatedCustomer() {
-    Map<String, Object> noGenericFields = emptyMap();
-    var inputCommand = Command.builder()
-        .tenantId("flowers")
-        .publicId("CUST-1")
-        .firstName("Anna")
-        .lastName("Smith")
-        .genericFields(noGenericFields)
-        .build();
-    var tenantId = new TenantId("flowers");
-    var publicId = new PublicId("CUST-1");
+  @Nested
+  class GetCustomer {
 
-    underTest.create(inputCommand);
+    @Test
+    void shouldReturnExistingCustomer() {
+      var tenantId = new TenantId("flowers");
+      var publicId = new PublicId("CUST-1");
+      var firstName = new FirstName("Anna");
+      var storedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .build();
+      customerRepo.insert(storedCustomer);
+      var inputQuery = new Query("flowers", "CUST-1");
 
-    var resultStoredCustomer = customerRepo.find(tenantId, publicId);
-    assertThat(resultStoredCustomer).isPresent();
-  }
+      var resultCustomer = underTest.get(inputQuery);
 
-  @Test
-  void shouldCreateCustomerWithoutNames() {
-    Map<String, Object> noGenericFields = emptyMap();
-    var inputCommandWithoutNames = Command.builder()
-        .tenantId("flowers")
-        .publicId("CUST-1")
-        .genericFields(noGenericFields)
-        .build();
+      assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(storedCustomer);
+    }
 
-    var resultCustomer = underTest.create(inputCommandWithoutNames);
+    @Test
+    void shouldRejectUnknownCustomer() {
+      var inputQueryForUnknownCustomer = new Query("flowers", "CUST-404");
 
-    assertThat(resultCustomer.getFirstName()).isNull();
-    assertThat(resultCustomer.getLastName()).isNull();
-  }
+      var thrown = catchThrowable(() -> underTest.get(inputQueryForUnknownCustomer));
 
-  @Test
-  void shouldCreateCustomerWithoutGenericFields() {
-    Map<String, Object> inputMissingGenericFields = null;
-    var inputCommandWithoutGenericFields = Command.builder()
-        .tenantId("flowers")
-        .publicId("CUST-1")
-        .genericFields(inputMissingGenericFields)
-        .build();
-
-    var resultCustomer = underTest.create(inputCommandWithoutGenericFields);
-
-    assertThat(resultCustomer.getGenericFields()).isEmpty();
+      assertThat(thrown).isInstanceOf(CustomerNotFoundException.class);
+    }
   }
 }

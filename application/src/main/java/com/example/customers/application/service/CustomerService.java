@@ -1,12 +1,14 @@
 package com.example.customers.application.service;
 
 import com.example.customers.application.port.in.CreateCustomerUseCase;
+import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.exception.CustomerNotFoundException;
 import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Objects.nonNull;
 
 @RequiredArgsConstructor
-public class CustomerService implements CreateCustomerUseCase {
+public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase {
 
   private final CustomerPort customerPort;
   private final GenericFieldPort genericFieldPort;
@@ -43,5 +45,13 @@ public class CustomerService implements CreateCustomerUseCase {
         .build();
 
     return customerPort.insert(newCustomer);
+  }
+
+  @Override
+  public Customer get(Query query) {
+    var tenantId = new TenantId(query.tenantId());
+    var publicId = new PublicId(query.publicId());
+
+    return customerPort.find(tenantId, publicId).orElseThrow(CustomerNotFoundException::new);
   }
 }
