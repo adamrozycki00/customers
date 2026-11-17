@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CustomerServiceTest {
@@ -61,5 +62,53 @@ class CustomerServiceTest {
     var resultCustomer = underTest.create(inputCommand);
 
     assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldStoreCreatedCustomer() {
+    Map<String, Object> noGenericFields = emptyMap();
+    var inputCommand = Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .firstName("Anna")
+        .lastName("Smith")
+        .genericFields(noGenericFields)
+        .build();
+    var tenantId = new TenantId("flowers");
+    var publicId = new PublicId("CUST-1");
+
+    underTest.create(inputCommand);
+
+    var resultStoredCustomer = customerRepo.find(tenantId, publicId);
+    assertThat(resultStoredCustomer).isPresent();
+  }
+
+  @Test
+  void shouldCreateCustomerWithoutNames() {
+    Map<String, Object> noGenericFields = emptyMap();
+    var inputCommandWithoutNames = Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .genericFields(noGenericFields)
+        .build();
+
+    var resultCustomer = underTest.create(inputCommandWithoutNames);
+
+    assertThat(resultCustomer.getFirstName()).isNull();
+    assertThat(resultCustomer.getLastName()).isNull();
+  }
+
+  @Test
+  void shouldCreateCustomerWithoutGenericFields() {
+    Map<String, Object> inputMissingGenericFields = null;
+    var inputCommandWithoutGenericFields = Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .genericFields(inputMissingGenericFields)
+        .build();
+
+    var resultCustomer = underTest.create(inputCommandWithoutGenericFields);
+
+    assertThat(resultCustomer.getGenericFields()).isEmpty();
   }
 }
