@@ -26,4 +26,9 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
         .filter(customer -> customer.getPublicId().equals(publicId))
         .findFirst();
   }
+
+  @Override
+  public void delete(TenantId tenantId, PublicId publicId) {
+    customers.removeIf(customer -> customer.getTenantId().equals(tenantId) && customer.getPublicId().equals(publicId));
+  }
 }

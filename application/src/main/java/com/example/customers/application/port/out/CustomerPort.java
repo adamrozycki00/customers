@@ -11,4 +11,6 @@ public interface CustomerPort {
   Customer insert(Customer customer);
 
   Optional<Customer> find(TenantId tenantId, PublicId publicId);
+
+  void delete(TenantId tenantId, PublicId publicId);
 }

@@ -1,6 +1,7 @@
 package com.example.customers.application.service;
 
 import com.example.customers.application.port.in.CreateCustomerUseCase;
+import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.application.port.out.GenericFieldPort;
@@ -19,13 +20,13 @@ import static java.util.Collections.emptyMap;
 import static java.util.Objects.nonNull;
 
 @RequiredArgsConstructor
-public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase {
+public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, DeleteCustomerUseCase {
 
   private final CustomerPort customerPort;
   private final GenericFieldPort genericFieldPort;
 
   @Override
-  public Customer create(Command command) {
+  public Customer create(CreateCustomerUseCase.Command command) {
     var tenantId = new TenantId(command.tenantId());
     var publicId = new PublicId(command.publicId());
     var firstName = nonNull(command.firstName()) ? new FirstName(command.firstName()) : null;
@@ -53,5 +54,13 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
     var publicId = new PublicId(query.publicId());
 
     return customerPort.find(tenantId, publicId).orElseThrow(CustomerNotFoundException::new);
+  }
+
+  @Override
+  public void delete(DeleteCustomerUseCase.Command command) {
+    var tenantId = new TenantId(command.tenantId());
+    var publicId = new PublicId(command.publicId());
+
+    customerPort.delete(tenantId, publicId);
   }
 }

@@ -3,6 +3,7 @@ package com.example.customers.application.service;
 import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
 import com.example.customers.application.port.in.CreateCustomerUseCase.Command;
+import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase.Query;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
@@ -147,6 +148,27 @@ class CustomerServiceTest {
       var thrown = catchThrowable(() -> underTest.get(inputQueryForUnknownCustomer));
 
       assertThat(thrown).isInstanceOf(CustomerNotFoundException.class);
+    }
+  }
+
+  @Nested
+  class DeleteCustomer {
+
+    @Test
+    void shouldDeleteCustomer() {
+      var tenantId = new TenantId("flowers");
+      var publicId = new PublicId("CUST-1");
+      var storedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .build();
+      customerRepo.insert(storedCustomer);
+      var inputCommand = new DeleteCustomerUseCase.Command("flowers", "CUST-1");
+
+      underTest.delete(inputCommand);
+
+      var resultStoredCustomer = customerRepo.find(tenantId, publicId);
+      assertThat(resultStoredCustomer).isEmpty();
     }
   }
 }
