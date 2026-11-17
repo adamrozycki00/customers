@@ -8,7 +8,6 @@ import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
-import com.example.customers.application.port.in.UpdateCustomerUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
@@ -26,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -294,111 +292,6 @@ class CustomerServiceTest {
       }
 
       return storedCustomers;
-    }
-  }
-
-  @Nested
-  class UpdateCustomer {
-
-    private final TenantId tenantId = new TenantId("flowers");
-    private final PublicId publicId = new PublicId("CUST-1");
-    private final FirstName storedFirstName = new FirstName("Anna");
-    private final LastName storedLastName = new LastName("Smith");
-
-    @Test
-    void shouldSetFirstName() {
-      storeCustomer();
-      Set<String> firstNameMask = Set.of("firstName");
-      var inputCommand = UpdateCustomerUseCase.Command.builder()
-          .tenantId("flowers")
-          .publicId("CUST-1")
-          .fieldMask(firstNameMask)
-          .firstName("Maria")
-          .build();
-      var expectedFirstName = new FirstName("Maria");
-      var expectedCustomer = Customer.builder()
-          .tenantId(tenantId)
-          .publicId(publicId)
-          .firstName(expectedFirstName)
-          .lastName(storedLastName)
-          .build();
-
-      var resultCustomer = underTest.update(inputCommand);
-
-      assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
-    }
-
-    @Test
-    void shouldClearFirstName() {
-      storeCustomer();
-      Set<String> firstNameMask = Set.of("firstName");
-      var inputCommandClearingFirstName = UpdateCustomerUseCase.Command.builder()
-          .tenantId("flowers")
-          .publicId("CUST-1")
-          .fieldMask(firstNameMask)
-          .build();
-      var expectedCustomer = Customer.builder()
-          .tenantId(tenantId)
-          .publicId(publicId)
-          .lastName(storedLastName)
-          .build();
-
-      var resultCustomer = underTest.update(inputCommandClearingFirstName);
-
-      assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
-    }
-
-    @Test
-    void shouldSetLastName() {
-      storeCustomer();
-      Set<String> lastNameMask = Set.of("lastName");
-      var inputCommand = UpdateCustomerUseCase.Command.builder()
-          .tenantId("flowers")
-          .publicId("CUST-1")
-          .fieldMask(lastNameMask)
-          .lastName("Nowak")
-          .build();
-      var expectedLastName = new LastName("Nowak");
-      var expectedCustomer = Customer.builder()
-          .tenantId(tenantId)
-          .publicId(publicId)
-          .firstName(storedFirstName)
-          .lastName(expectedLastName)
-          .build();
-
-      var resultCustomer = underTest.update(inputCommand);
-
-      assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
-    }
-
-    @Test
-    void shouldClearLastName() {
-      storeCustomer();
-      Set<String> lastNameMask = Set.of("lastName");
-      var inputCommandClearingLastName = UpdateCustomerUseCase.Command.builder()
-          .tenantId("flowers")
-          .publicId("CUST-1")
-          .fieldMask(lastNameMask)
-          .build();
-      var expectedCustomer = Customer.builder()
-          .tenantId(tenantId)
-          .publicId(publicId)
-          .firstName(storedFirstName)
-          .build();
-
-      var resultCustomer = underTest.update(inputCommandClearingLastName);
-
-      assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
-    }
-
-    private void storeCustomer() {
-      var storedCustomer = Customer.builder()
-          .tenantId(tenantId)
-          .publicId(publicId)
-          .firstName(storedFirstName)
-          .lastName(storedLastName)
-          .build();
-      customerRepo.insert(storedCustomer);
     }
   }
 }

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
@@ -86,5 +87,41 @@ class TenantGenericFieldsTest {
 
     assertThat(thrown).isNotNull();
     assertThat(thrown.getInvalidFieldNames()).containsExactlyInAnyOrderElementsOf(expectedInvalidFieldNames);
+  }
+
+  @Test
+  void shouldReturnRegisteredFieldNames() {
+    var inputRegisteredNames = List.of("vip");
+    var expectedFieldNames = Set.of(registeredFieldName);
+
+    var resultFieldNames = tenantGenericFields.toRegisteredFieldNames(inputRegisteredNames);
+
+    assertThat(resultFieldNames).isEqualTo(expectedFieldNames);
+  }
+
+  @Test
+  void shouldRejectUnregisteredFieldNames() {
+    var inputUnregisteredNames = List.of("vipp");
+    var expectedInvalidFieldNames = List.of("vipp");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> tenantGenericFields.toRegisteredFieldNames(inputUnregisteredNames));
+
+    assertThat(thrown).isNotNull();
+    assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
+  }
+
+  @Test
+  void shouldRejectInvalidFieldNamesToClear() {
+    var inputInvalidNames = List.of("date.of.birth");
+    var expectedInvalidFieldNames = List.of("date.of.birth");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> tenantGenericFields.toRegisteredFieldNames(inputInvalidNames));
+
+    assertThat(thrown).isNotNull();
+    assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
   }
 }

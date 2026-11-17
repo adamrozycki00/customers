@@ -7,10 +7,13 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
@@ -46,6 +49,32 @@ public final class TenantGenericFields {
     }
 
     return typedValues;
+  }
+
+  public Set<FieldName> toRegisteredFieldNames(Collection<String> rawNames) {
+    Set<FieldName> registeredNames = new LinkedHashSet<>();
+    List<String> invalidFieldNames = new ArrayList<>();
+
+    for (String rawName : rawNames) {
+      try {
+        var name = toRegisteredFieldName(rawName);
+        registeredNames.add(name);
+      } catch (InvalidFieldNameException | InvalidGenericFieldValueException e) {
+        invalidFieldNames.add(rawName);
+      }
+    }
+
+    if (isNotEmpty(invalidFieldNames)) {
+      throw new InvalidGenericFieldValuesException(invalidFieldNames);
+    }
+
+    return registeredNames;
+  }
+
+  private FieldName toRegisteredFieldName(String rawName) {
+    var name = new FieldName(rawName);
+    var field = findByName(name).orElseThrow(InvalidGenericFieldValueException::new);
+    return field.getName();
   }
 
   private GenericFieldValue toTypedValue(FieldName name, Object rawValue) {

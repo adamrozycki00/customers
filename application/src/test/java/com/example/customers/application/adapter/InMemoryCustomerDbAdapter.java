@@ -7,10 +7,14 @@ import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.genericfield.FieldName;
+import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class InMemoryCustomerDbAdapter implements CustomerPort {
@@ -61,12 +65,15 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
     var current = storedCustomer.get();
     var firstName = apply(update.firstName(), current.getFirstName());
     var lastName = apply(update.lastName(), current.getLastName());
+    Map<FieldName, GenericFieldValue> genericFields = new LinkedHashMap<>(current.getGenericFields());
+    genericFields.putAll(update.genericFieldsToSet());
+    genericFields.keySet().removeAll(update.genericFieldsToClear());
     var updatedCustomer = Customer.builder()
         .tenantId(current.getTenantId())
         .publicId(current.getPublicId())
         .firstName(firstName)
         .lastName(lastName)
-        .genericFields(current.getGenericFields())
+        .genericFields(genericFields)
         .build();
     customers.remove(current);
     customers.add(updatedCustomer);

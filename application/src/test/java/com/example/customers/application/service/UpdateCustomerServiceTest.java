@@ -1,0 +1,266 @@
+package com.example.customers.application.service;
+
+import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
+import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
+import com.example.customers.application.port.in.UpdateCustomerUseCase;
+import com.example.customers.domain.customer.Customer;
+import com.example.customers.domain.customer.FirstName;
+import com.example.customers.domain.customer.LastName;
+import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.genericfield.FieldName;
+import com.example.customers.domain.genericfield.FieldType;
+import com.example.customers.domain.genericfield.GenericField;
+import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
+import com.example.customers.domain.genericfield.value.BooleanValue;
+import com.example.customers.domain.genericfield.value.GenericFieldValue;
+import com.example.customers.domain.tenant.TenantId;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+
+class UpdateCustomerServiceTest {
+
+  private final InMemoryCustomerDbAdapter customerRepo = new InMemoryCustomerDbAdapter();
+  private final InMemoryGenericFieldDbAdapter genericFieldRepo = new InMemoryGenericFieldDbAdapter();
+
+  private final UpdateCustomerService underTest = new UpdateCustomerService(customerRepo, genericFieldRepo);
+
+  private final TenantId tenantId = new TenantId("flowers");
+  private final PublicId publicId = new PublicId("CUST-1");
+  private final FirstName storedFirstName = new FirstName("Anna");
+  private final LastName storedLastName = new LastName("Smith");
+  private final FieldName vipName = new FieldName("vip");
+
+  @Test
+  void shouldSetFirstName() {
+    storeCustomer();
+    Set<String> firstNameMask = Set.of("firstName");
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(firstNameMask)
+        .firstName("Maria")
+        .build();
+    var expectedFirstName = new FirstName("Maria");
+    var expectedCustomer = Customer.builder()
+        .tenantId(tenantId)
+        .publicId(publicId)
+        .firstName(expectedFirstName)
+        .lastName(storedLastName)
+        .build();
+
+    var resultCustomer = underTest.update(inputCommand);
+
+    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldClearFirstName() {
+    storeCustomer();
+    Set<String> firstNameMask = Set.of("firstName");
+    var inputCommandClearingFirstName = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(firstNameMask)
+        .build();
+    var expectedCustomer = Customer.builder()
+        .tenantId(tenantId)
+        .publicId(publicId)
+        .lastName(storedLastName)
+        .build();
+
+    var resultCustomer = underTest.update(inputCommandClearingFirstName);
+
+    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldSetLastName() {
+    storeCustomer();
+    Set<String> lastNameMask = Set.of("lastName");
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(lastNameMask)
+        .lastName("Nowak")
+        .build();
+    var expectedLastName = new LastName("Nowak");
+    var expectedCustomer = Customer.builder()
+        .tenantId(tenantId)
+        .publicId(publicId)
+        .firstName(storedFirstName)
+        .lastName(expectedLastName)
+        .build();
+
+    var resultCustomer = underTest.update(inputCommand);
+
+    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldClearLastName() {
+    storeCustomer();
+    Set<String> lastNameMask = Set.of("lastName");
+    var inputCommandClearingLastName = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(lastNameMask)
+        .build();
+    var expectedCustomer = Customer.builder()
+        .tenantId(tenantId)
+        .publicId(publicId)
+        .firstName(storedFirstName)
+        .build();
+
+    var resultCustomer = underTest.update(inputCommandClearingLastName);
+
+    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldSetGenericField() {
+    registerVipField();
+    storeCustomer();
+    Set<String> vipMask = Set.of("genericFields.vip");
+    Map<String, Object> inputGenericFields = Map.of("vip", true);
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(vipMask)
+        .genericFields(inputGenericFields)
+        .build();
+    var expectedVipValue = new BooleanValue(true);
+    Map<FieldName, GenericFieldValue> expectedGenericFields = Map.of(vipName, expectedVipValue);
+    var expectedCustomer = Customer.builder()
+        .tenantId(tenantId)
+        .publicId(publicId)
+        .firstName(storedFirstName)
+        .lastName(storedLastName)
+        .genericFields(expectedGenericFields)
+        .build();
+
+    var resultCustomer = underTest.update(inputCommand);
+
+    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldClearGenericField() {
+    registerVipField();
+    var storedVipValue = new BooleanValue(true);
+    Map<FieldName, GenericFieldValue> storedGenericFields = Map.of(vipName, storedVipValue);
+    storeCustomer(storedGenericFields);
+    Set<String> vipMask = Set.of("genericFields.vip");
+    Map<String, Object> inputGenericFieldsClearingVip = new HashMap<>();
+    inputGenericFieldsClearingVip.put("vip", null);
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(vipMask)
+        .genericFields(inputGenericFieldsClearingVip)
+        .build();
+
+    var resultCustomer = underTest.update(inputCommand);
+
+    assertThat(resultCustomer.getGenericFields()).isEmpty();
+  }
+
+  @Test
+  void shouldRejectSettingUnregisteredGenericField() {
+    registerVipField();
+    storeCustomer();
+    Set<String> unregisteredFieldMask = Set.of("genericFields.vipp");
+    Map<String, Object> inputValueOfUnregisteredField = Map.of("vipp", true);
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(unregisteredFieldMask)
+        .genericFields(inputValueOfUnregisteredField)
+        .build();
+    var expectedInvalidFieldNames = List.of("vipp");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> underTest.update(inputCommand));
+
+    assertThat(thrown).isNotNull();
+    assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
+  }
+
+  @Test
+  void shouldRejectClearingUnregisteredGenericField() {
+    registerVipField();
+    storeCustomer();
+    Set<String> unregisteredFieldMask = Set.of("genericFields.vipp");
+    Map<String, Object> inputGenericFieldsClearingUnregisteredField = new HashMap<>();
+    inputGenericFieldsClearingUnregisteredField.put("vipp", null);
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(unregisteredFieldMask)
+        .genericFields(inputGenericFieldsClearingUnregisteredField)
+        .build();
+    var expectedInvalidFieldNames = List.of("vipp");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> underTest.update(inputCommand));
+
+    assertThat(thrown).isNotNull();
+    assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
+  }
+
+  @Test
+  void shouldRejectGenericFieldValueOfWrongType() {
+    registerVipField();
+    storeCustomer();
+    Set<String> vipMask = Set.of("genericFields.vip");
+    Map<String, Object> inputValueOfWrongType = Map.of("vip", "yes");
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(vipMask)
+        .genericFields(inputValueOfWrongType)
+        .build();
+    var expectedInvalidFieldNames = List.of("vip");
+
+    var thrown = catchThrowableOfType(
+        InvalidGenericFieldValuesException.class,
+        () -> underTest.update(inputCommand));
+
+    assertThat(thrown).isNotNull();
+    assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
+  }
+
+  private void registerVipField() {
+    var vipField = GenericField.builder()
+        .tenantId(tenantId)
+        .name(vipName)
+        .type(FieldType.BOOLEAN)
+        .build();
+    genericFieldRepo.insert(vipField);
+  }
+
+  private void storeCustomer() {
+    Map<FieldName, GenericFieldValue> noGenericFields = emptyMap();
+    storeCustomer(noGenericFields);
+  }
+
+  private void storeCustomer(Map<FieldName, GenericFieldValue> genericFields) {
+    var storedCustomer = Customer.builder()
+        .tenantId(tenantId)
+        .publicId(publicId)
+        .firstName(storedFirstName)
+        .lastName(storedLastName)
+        .genericFields(genericFields)
+        .build();
+    customerRepo.insert(storedCustomer);
+  }
+}
