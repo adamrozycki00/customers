@@ -1,5 +1,7 @@
 package com.example.customers.application.port.out;
 
+import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.PageRequest;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.PublicId;
 import com.example.customers.domain.tenant.TenantId;
@@ -11,6 +13,8 @@ public interface CustomerPort {
   Customer insert(Customer customer);
 
   Optional<Customer> find(TenantId tenantId, PublicId publicId);
+
+  CustomerPage getPage(TenantId tenantId, PageRequest pageRequest);
 
   void delete(TenantId tenantId, PublicId publicId);
 }

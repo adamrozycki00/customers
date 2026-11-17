@@ -1,5 +1,7 @@
 package com.example.customers.application.adapter;
 
+import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.PublicId;
@@ -25,6 +27,25 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
         .filter(customer -> customer.getTenantId().equals(tenantId))
         .filter(customer -> customer.getPublicId().equals(publicId))
         .findFirst();
+  }
+
+  @Override
+  public CustomerPage getPage(TenantId tenantId, PageRequest pageRequest) {
+    var tenantCustomers = customers.stream()
+        .filter(customer -> customer.getTenantId().equals(tenantId))
+        .toList();
+    long offset = (long) (pageRequest.page() - 1) * pageRequest.size();
+    var pageCustomers = tenantCustomers.stream()
+        .skip(offset)
+        .limit(pageRequest.size())
+        .toList();
+
+    return CustomerPage.builder()
+        .customers(pageCustomers)
+        .page(pageRequest.page())
+        .size(pageRequest.size())
+        .totalElements(tenantCustomers.size())
+        .build();
   }
 
   @Override

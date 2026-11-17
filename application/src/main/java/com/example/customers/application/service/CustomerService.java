@@ -1,8 +1,11 @@
 package com.example.customers.application.service;
 
+import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
+import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.customer.Customer;
@@ -20,7 +23,10 @@ import static java.util.Collections.emptyMap;
 import static java.util.Objects.nonNull;
 
 @RequiredArgsConstructor
-public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, DeleteCustomerUseCase {
+public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, ListCustomersUseCase, DeleteCustomerUseCase {
+
+  private static final int DEFAULT_PAGE = 1;
+  private static final int DEFAULT_PAGE_SIZE = 20;
 
   private final CustomerPort customerPort;
   private final GenericFieldPort genericFieldPort;
@@ -49,11 +55,21 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
   }
 
   @Override
-  public Customer get(Query query) {
+  public Customer get(GetCustomerUseCase.Query query) {
     var tenantId = new TenantId(query.tenantId());
     var publicId = new PublicId(query.publicId());
 
     return customerPort.find(tenantId, publicId).orElseThrow(CustomerNotFoundException::new);
+  }
+
+  @Override
+  public CustomerPage list(ListCustomersUseCase.Query query) {
+    var tenantId = new TenantId(query.tenantId());
+    int page = nonNull(query.page()) ? query.page() : DEFAULT_PAGE;
+    int size = nonNull(query.size()) ? query.size() : DEFAULT_PAGE_SIZE;
+    var pageRequest = new PageRequest(page, size);
+
+    return customerPort.getPage(tenantId, pageRequest);
   }
 
   @Override

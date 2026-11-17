@@ -2,9 +2,11 @@ package com.example.customers.application.service;
 
 import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
-import com.example.customers.application.port.in.CreateCustomerUseCase.Command;
+import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
-import com.example.customers.application.port.in.GetCustomerUseCase.Query;
+import com.example.customers.application.port.in.GetCustomerUseCase;
+import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
@@ -19,6 +21,8 @@ import com.example.customers.domain.tenant.TenantId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
@@ -46,7 +50,7 @@ class CustomerServiceTest {
           .build();
       genericFieldRepo.insert(vipField);
       Map<String, Object> inputGenericFields = Map.of("vip", true);
-      var inputCommand = Command.builder()
+      var inputCommand = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
           .publicId("CUST-1")
           .firstName("Anna")
@@ -74,7 +78,7 @@ class CustomerServiceTest {
     @Test
     void shouldStoreCreatedCustomer() {
       Map<String, Object> noGenericFields = emptyMap();
-      var inputCommand = Command.builder()
+      var inputCommand = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
           .publicId("CUST-1")
           .firstName("Anna")
@@ -93,7 +97,7 @@ class CustomerServiceTest {
     @Test
     void shouldCreateCustomerWithoutNames() {
       Map<String, Object> noGenericFields = emptyMap();
-      var inputCommandWithoutNames = Command.builder()
+      var inputCommandWithoutNames = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
           .publicId("CUST-1")
           .genericFields(noGenericFields)
@@ -108,7 +112,7 @@ class CustomerServiceTest {
     @Test
     void shouldCreateCustomerWithoutGenericFields() {
       Map<String, Object> inputMissingGenericFields = null;
-      var inputCommandWithoutGenericFields = Command.builder()
+      var inputCommandWithoutGenericFields = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
           .publicId("CUST-1")
           .genericFields(inputMissingGenericFields)
@@ -134,7 +138,7 @@ class CustomerServiceTest {
           .firstName(firstName)
           .build();
       customerRepo.insert(storedCustomer);
-      var inputQuery = new Query("flowers", "CUST-1");
+      var inputQuery = new GetCustomerUseCase.Query("flowers", "CUST-1");
 
       var resultCustomer = underTest.get(inputQuery);
 
@@ -143,7 +147,7 @@ class CustomerServiceTest {
 
     @Test
     void shouldRejectUnknownCustomer() {
-      var inputQueryForUnknownCustomer = new Query("flowers", "CUST-404");
+      var inputQueryForUnknownCustomer = new GetCustomerUseCase.Query("flowers", "CUST-404");
 
       var thrown = catchThrowable(() -> underTest.get(inputQueryForUnknownCustomer));
 
@@ -169,6 +173,48 @@ class CustomerServiceTest {
 
       var resultStoredCustomer = customerRepo.find(tenantId, publicId);
       assertThat(resultStoredCustomer).isEmpty();
+    }
+  }
+
+  @Nested
+  class ListCustomers {
+
+    private final TenantId tenantId = new TenantId("flowers");
+
+    @Test
+    void shouldReturnFirstPageWithDefaultSize() {
+      var storedCustomers = storeCustomers(25);
+      var inputQueryWithoutPaging = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .build();
+      var expectedCustomers = storedCustomers.subList(0, 20);
+      var expectedPage = CustomerPage.builder()
+          .customers(expectedCustomers)
+          .page(1)
+          .size(20)
+          .totalElements(25)
+          .build();
+
+      var resultPage = underTest.list(inputQueryWithoutPaging);
+
+      assertThat(resultPage).usingRecursiveComparison().isEqualTo(expectedPage);
+    }
+
+    private List<Customer> storeCustomers(int count) {
+      List<Customer> storedCustomers = new ArrayList<>();
+
+      for (int number = 1; number <= count; number++) {
+        String rawPublicId = "CUST-%02d".formatted(number);
+        var publicId = new PublicId(rawPublicId);
+        var customer = Customer.builder()
+            .tenantId(tenantId)
+            .publicId(publicId)
+            .build();
+        customerRepo.insert(customer);
+        storedCustomers.add(customer);
+      }
+
+      return storedCustomers;
     }
   }
 }
