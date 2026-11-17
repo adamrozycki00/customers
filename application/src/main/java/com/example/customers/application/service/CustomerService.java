@@ -18,9 +18,6 @@ import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.Builder;
 
-import java.util.Map;
-
-import static java.util.Collections.emptyMap;
 import static java.util.Objects.nonNull;
 
 @Builder
@@ -39,11 +36,10 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
     var publicId = new PublicId(command.publicId());
     var firstName = nonNull(command.firstName()) ? new FirstName(command.firstName()) : null;
     var lastName = nonNull(command.lastName()) ? new LastName(command.lastName()) : null;
-    Map<String, ?> rawGenericFields = nonNull(command.genericFields()) ? command.genericFields() : emptyMap();
 
     var registeredFields = genericFieldPort.findAllByTenant(tenantId);
     var tenantGenericFields = TenantGenericFields.of(registeredFields);
-    var genericFields = tenantGenericFields.toTypedValues(rawGenericFields);
+    var genericFields = tenantGenericFields.toTypedValues(command.genericFields());
 
     var newCustomer = Customer.builder()
         .tenantId(tenantId)

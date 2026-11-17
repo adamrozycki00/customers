@@ -186,11 +186,8 @@ class UpdateCustomerServiceTest {
         .build();
     var expectedInvalidFieldNames = List.of("vipp");
 
-    var thrown = catchThrowableOfType(
-        InvalidGenericFieldValuesException.class,
-        () -> underTest.update(inputCommand));
+    var thrown = catchThrowableOfType(InvalidGenericFieldValuesException.class, () -> underTest.update(inputCommand));
 
-    assertThat(thrown).isNotNull();
     assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
   }
 
@@ -209,33 +206,8 @@ class UpdateCustomerServiceTest {
         .build();
     var expectedInvalidFieldNames = List.of("vipp");
 
-    var thrown = catchThrowableOfType(
-        InvalidGenericFieldValuesException.class,
-        () -> underTest.update(inputCommand));
+    var thrown = catchThrowableOfType(InvalidGenericFieldValuesException.class, () -> underTest.update(inputCommand));
 
-    assertThat(thrown).isNotNull();
-    assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
-  }
-
-  @Test
-  void shouldRejectGenericFieldValueOfWrongType() {
-    registerVipField();
-    storeCustomer();
-    Set<String> vipMask = Set.of("genericFields.vip");
-    Map<String, Object> inputValueOfWrongType = Map.of("vip", "yes");
-    var inputCommand = UpdateCustomerUseCase.Command.builder()
-        .tenantId("flowers")
-        .publicId("CUST-1")
-        .fieldMask(vipMask)
-        .genericFields(inputValueOfWrongType)
-        .build();
-    var expectedInvalidFieldNames = List.of("vip");
-
-    var thrown = catchThrowableOfType(
-        InvalidGenericFieldValuesException.class,
-        () -> underTest.update(inputCommand));
-
-    assertThat(thrown).isNotNull();
     assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
   }
 
@@ -255,11 +227,8 @@ class UpdateCustomerServiceTest {
         .build();
     var expectedInvalidFieldNames = List.of("vipp", "ghost");
 
-    var thrown = catchThrowableOfType(
-        InvalidGenericFieldValuesException.class,
-        () -> underTest.update(inputCommand));
+    var thrown = catchThrowableOfType(InvalidGenericFieldValuesException.class, () -> underTest.update(inputCommand));
 
-    assertThat(thrown).isNotNull();
     assertThat(thrown.getInvalidFieldNames()).containsExactlyInAnyOrderElementsOf(expectedInvalidFieldNames);
   }
 

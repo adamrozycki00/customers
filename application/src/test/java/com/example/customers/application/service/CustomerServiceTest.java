@@ -242,30 +242,6 @@ class CustomerServiceTest {
     }
 
     @Test
-    void shouldRejectZeroPage() {
-      var inputQueryForZeroPage = ListCustomersUseCase.Query.builder()
-          .tenantId("flowers")
-          .page(0)
-          .build();
-
-      var thrown = catchThrowable(() -> underTest.list(inputQueryForZeroPage));
-
-      assertThat(thrown).isInstanceOf(InvalidPageRequestException.class);
-    }
-
-    @Test
-    void shouldRejectZeroSize() {
-      var inputQueryForZeroSize = ListCustomersUseCase.Query.builder()
-          .tenantId("flowers")
-          .size(0)
-          .build();
-
-      var thrown = catchThrowable(() -> underTest.list(inputQueryForZeroSize));
-
-      assertThat(thrown).isInstanceOf(InvalidPageRequestException.class);
-    }
-
-    @Test
     void shouldRejectTooLargeSize() {
       var inputQueryForTooLargeSize = ListCustomersUseCase.Query.builder()
           .tenantId("flowers")

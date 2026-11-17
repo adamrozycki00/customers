@@ -75,7 +75,7 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
   }
 
   private static Map<String, Object> getRawGenericFieldsToUpdate(UpdateCustomerUseCase.Command command) {
-    Map<String, Object> rawGenericFields = nonNull(command.genericFields()) ? command.genericFields() : emptyMap();
+    var rawGenericFields = command.genericFields();
     var genericFieldNamesToUpdate = getGenericFieldNamesToUpdate(command.fieldMask());
     return genericFieldNamesToUpdate.stream()
         .collect(LinkedHashMap::new,
