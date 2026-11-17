@@ -1,6 +1,8 @@
 package com.example.customers.application.adapter;
 
 import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.CustomerUpdate;
+import com.example.customers.application.port.FieldChange;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
@@ -46,6 +48,38 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
         .size(pageRequest.size())
         .totalElements(tenantCustomers.size())
         .build();
+  }
+
+  @Override
+  public Optional<Customer> update(TenantId tenantId, PublicId publicId, CustomerUpdate update) {
+    var storedCustomer = find(tenantId, publicId);
+
+    if (storedCustomer.isEmpty()) {
+      return Optional.empty();
+    }
+
+    var current = storedCustomer.get();
+    var firstName = apply(update.firstName(), current.getFirstName());
+    var lastName = apply(update.lastName(), current.getLastName());
+    var updatedCustomer = Customer.builder()
+        .tenantId(current.getTenantId())
+        .publicId(current.getPublicId())
+        .firstName(firstName)
+        .lastName(lastName)
+        .genericFields(current.getGenericFields())
+        .build();
+    customers.remove(current);
+    customers.add(updatedCustomer);
+
+    return Optional.of(updatedCustomer);
+  }
+
+  private static <T> T apply(FieldChange<T> change, T currentValue) {
+    return switch (change) {
+      case FieldChange.Keep<T> keep -> currentValue;
+      case FieldChange.Replace<T> replace -> replace.value();
+      case FieldChange.Clear<T> clear -> null;
+    };
   }
 
   @Override

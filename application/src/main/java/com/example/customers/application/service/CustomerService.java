@@ -2,11 +2,14 @@ package com.example.customers.application.service;
 
 import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.CustomerUpdate;
+import com.example.customers.application.port.FieldChange;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
+import com.example.customers.application.port.in.UpdateCustomerUseCase;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.customer.Customer;
@@ -19,15 +22,18 @@ import com.example.customers.domain.tenant.TenantId;
 import lombok.Builder;
 
 import java.util.Map;
+import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.nonNull;
 
 @Builder
 public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, ListCustomersUseCase,
-    DeleteCustomerUseCase {
+    UpdateCustomerUseCase, DeleteCustomerUseCase {
 
   private static final int DEFAULT_PAGE = 1;
+  private static final String FIRST_NAME_PATH = "firstName";
+  private static final String LAST_NAME_PATH = "lastName";
 
   private final CustomerPort customerPort;
   private final GenericFieldPort genericFieldPort;
@@ -79,6 +85,38 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
     if (size > pagingSettings.maxPageSize()) {
       throw new InvalidPageRequestException();
     }
+  }
+
+  @Override
+  public Customer update(UpdateCustomerUseCase.Command command) {
+    var tenantId = new TenantId(command.tenantId());
+    var publicId = new PublicId(command.publicId());
+    var customerUpdate = buildCustomerUpdate(command);
+
+    return customerPort.update(tenantId, publicId, customerUpdate).orElseThrow();
+  }
+
+  private static CustomerUpdate buildCustomerUpdate(UpdateCustomerUseCase.Command command) {
+    var fieldMask = command.fieldMask();
+    var firstNameChange = fieldMask.contains(FIRST_NAME_PATH)
+        ? toFieldChange(command.firstName(), FirstName::new)
+        : new FieldChange.Keep<FirstName>();
+    var lastNameChange = fieldMask.contains(LAST_NAME_PATH)
+        ? toFieldChange(command.lastName(), LastName::new)
+        : new FieldChange.Keep<LastName>();
+    return CustomerUpdate.builder()
+        .firstName(firstNameChange)
+        .lastName(lastNameChange)
+        .build();
+  }
+
+  private static <T> FieldChange<T> toFieldChange(String rawValue, Function<String, T> toField) {
+    if (nonNull(rawValue)) {
+      var field = toField.apply(rawValue);
+      return new FieldChange.Replace<>(field);
+    }
+
+    return new FieldChange.Clear<>();
   }
 
   @Override
