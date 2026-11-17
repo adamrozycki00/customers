@@ -200,6 +200,27 @@ class CustomerServiceTest {
       assertThat(resultPage).usingRecursiveComparison().isEqualTo(expectedPage);
     }
 
+    @Test
+    void shouldReturnRequestedPage() {
+      var storedCustomers = storeCustomers(25);
+      var inputQueryForSecondPageOfTen = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .page(2)
+          .size(10)
+          .build();
+      var expectedCustomers = storedCustomers.subList(10, 20);
+      var expectedPage = CustomerPage.builder()
+          .customers(expectedCustomers)
+          .page(2)
+          .size(10)
+          .totalElements(25)
+          .build();
+
+      var resultPage = underTest.list(inputQueryForSecondPageOfTen);
+
+      assertThat(resultPage).usingRecursiveComparison().isEqualTo(expectedPage);
+    }
+
     private List<Customer> storeCustomers(int count) {
       List<Customer> storedCustomers = new ArrayList<>();
 
