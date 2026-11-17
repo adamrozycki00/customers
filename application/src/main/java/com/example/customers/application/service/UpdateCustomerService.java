@@ -15,6 +15,7 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +24,6 @@ import java.util.function.Function;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
 @RequiredArgsConstructor
@@ -42,36 +42,45 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
     var publicId = new PublicId(command.publicId());
     var registeredFields = genericFieldPort.findAllByTenant(tenantId);
     var tenantGenericFields = TenantGenericFields.of(registeredFields);
-    var genericFieldsToSet = buildGenericFieldsToSet(tenantGenericFields, command);
-    var genericFieldsToClear = buildGenericFieldsToClear(tenantGenericFields, command);
+    var rawGenericFieldsToUpdate = getRawGenericFieldsToUpdate(command);
+    var genericFieldsToSet = buildGenericFieldsToSet(tenantGenericFields, rawGenericFieldsToUpdate);
+    var genericFieldsToClear = buildGenericFieldsToClear(tenantGenericFields, rawGenericFieldsToUpdate);
     var customerUpdate = buildCustomerUpdate(command, genericFieldsToSet, genericFieldsToClear);
 
     return customerPort.update(tenantId, publicId, customerUpdate).orElseThrow();
   }
 
+  private static Map<String, Object> getRawGenericFieldsToUpdate(UpdateCustomerUseCase.Command command) {
+    Map<String, Object> rawGenericFields = nonNull(command.genericFields()) ? command.genericFields() : emptyMap();
+    var genericFieldNamesToUpdate = getGenericFieldNamesToUpdate(command.fieldMask());
+    return genericFieldNamesToUpdate.stream()
+        .collect(LinkedHashMap::new,
+            (updates, fieldName) -> {
+              var rawValue = rawGenericFields.get(fieldName);
+              updates.put(fieldName, rawValue);
+            }, Map::putAll);
+  }
+
   private static Map<FieldName, GenericFieldValue> buildGenericFieldsToSet(TenantGenericFields tenantGenericFields,
-                                                                           UpdateCustomerUseCase.Command command) {
-    var genericFieldNamesToUpdate = getGenericFieldNames(command.fieldMask());
-    Map<String, Object> rawGenericFieldsToUpdate = nonNull(command.genericFields()) ? command.genericFields() : emptyMap();
-    var rawGenericFieldsToSet = genericFieldNamesToUpdate.stream()
-        .filter(name -> nonNull(rawGenericFieldsToUpdate.get(name)))
-        .collect(toMap(identity(), rawGenericFieldsToUpdate::get));
+                                                                           Map<String, Object> rawGenericFieldsToUpdate) {
+    var rawGenericFieldsToSet = rawGenericFieldsToUpdate.entrySet().stream()
+        .filter(fieldToUpdate -> nonNull(fieldToUpdate.getValue()))
+        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     return tenantGenericFields.toTypedValues(rawGenericFieldsToSet);
   }
 
   private static Set<FieldName> buildGenericFieldsToClear(TenantGenericFields tenantGenericFields,
-                                                          UpdateCustomerUseCase.Command command) {
-    var genericFieldNamesToUpdate = getGenericFieldNames(command.fieldMask());
-    Map<String, Object> rawGenericFieldsToUpdate = nonNull(command.genericFields()) ? command.genericFields() : emptyMap();
-    var rawGenericFieldsToClear = genericFieldNamesToUpdate.stream()
-        .filter(name -> isNull(rawGenericFieldsToUpdate.get(name)))
+                                                          Map<String, Object> rawGenericFieldsToUpdate) {
+    var rawGenericFieldsToClear = rawGenericFieldsToUpdate.entrySet().stream()
+        .filter(fieldToUpdate -> isNull(fieldToUpdate.getValue()))
+        .map(Map.Entry::getKey)
         .toList();
 
     return tenantGenericFields.toRegisteredFieldNames(rawGenericFieldsToClear);
   }
 
-  private static List<String> getGenericFieldNames(Set<String> fieldMask) {
+  private static List<String> getGenericFieldNamesToUpdate(Set<String> fieldMask) {
     return fieldMask.stream()
         .filter(path -> path.startsWith(GENERIC_FIELDS_PATH_PREFIX))
         .map(path -> path.substring(GENERIC_FIELDS_PATH_PREFIX.length()))
