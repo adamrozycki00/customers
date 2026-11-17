@@ -19,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.FIRST_NAME_PATH;
+import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.GENERIC_FIELDS_PATH_PREFIX;
+import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.LAST_NAME_PATH;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
@@ -28,10 +31,6 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 @RequiredArgsConstructor
 public class UpdateCustomerService implements UpdateCustomerUseCase {
-
-  private static final String FIRST_NAME_PATH = "firstName";
-  private static final String LAST_NAME_PATH = "lastName";
-  private static final String GENERIC_FIELDS_PATH_PREFIX = "genericFields.";
 
   private final CustomerPort customerPort;
   private final GenericFieldPort genericFieldPort;

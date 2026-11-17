@@ -22,4 +22,17 @@ class UpdateCustomerCommandTest {
 
     assertThat(thrown).isInstanceOf(InvalidFieldMaskException.class);
   }
+
+  @Test
+  void shouldRejectUnknownPathInFieldMask() {
+    Set<String> inputFieldMaskWithUnknownPath = Set.of("email");
+
+    var thrown = catchThrowable(() -> UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-1")
+        .fieldMask(inputFieldMaskWithUnknownPath)
+        .build());
+
+    assertThat(thrown).isInstanceOf(InvalidFieldMaskException.class);
+  }
 }

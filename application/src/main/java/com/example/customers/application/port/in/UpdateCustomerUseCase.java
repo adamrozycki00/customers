@@ -24,7 +24,9 @@ public interface UpdateCustomerUseCase {
       String lastName,
       Map<String, Object> genericFields) {
 
-    private static final String PUBLIC_ID_PATH = "publicId";
+    public static final String FIRST_NAME_PATH = "firstName";
+    public static final String LAST_NAME_PATH = "lastName";
+    public static final String GENERIC_FIELDS_PATH_PREFIX = "genericFields.";
 
     public Command {
       fieldMask = nonNull(fieldMask) ? fieldMask : emptySet();
@@ -33,9 +35,16 @@ public interface UpdateCustomerUseCase {
     }
 
     private static void validate(Set<String> fieldMask) {
-      if (fieldMask.contains(PUBLIC_ID_PATH)) {
+      if (fieldMask.stream().anyMatch(Command::isUnknownPath)) {
         throw new InvalidFieldMaskException();
       }
+    }
+
+    private static boolean isUnknownPath(String path) {
+      var isKnownPath = path.equals(FIRST_NAME_PATH)
+          || path.equals(LAST_NAME_PATH)
+          || path.startsWith(GENERIC_FIELDS_PATH_PREFIX);
+      return !isKnownPath;
     }
   }
 }
