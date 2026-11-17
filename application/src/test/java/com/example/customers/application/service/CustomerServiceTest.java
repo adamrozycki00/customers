@@ -2,6 +2,7 @@ package com.example.customers.application.service;
 
 import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
+import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
@@ -34,7 +35,13 @@ class CustomerServiceTest {
   private final InMemoryCustomerDbAdapter customerRepo = new InMemoryCustomerDbAdapter();
   private final InMemoryGenericFieldDbAdapter genericFieldRepo = new InMemoryGenericFieldDbAdapter();
 
-  private final CustomerService underTest = new CustomerService(customerRepo, genericFieldRepo);
+  private final PagingSettings pagingSettings = new PagingSettings(20, 100);
+
+  private final CustomerService underTest = CustomerService.builder()
+      .customerPort(customerRepo)
+      .genericFieldPort(genericFieldRepo)
+      .pagingSettings(pagingSettings)
+      .build();
 
   @Nested
   class CreateCustomer {
@@ -219,6 +226,55 @@ class CustomerServiceTest {
       var resultPage = underTest.list(inputQueryForSecondPageOfTen);
 
       assertThat(resultPage).usingRecursiveComparison().isEqualTo(expectedPage);
+    }
+
+    @Test
+    void shouldAcceptMaxPageSize() {
+      storeCustomers(1);
+      var inputQueryForMaxPageSize = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .size(100)
+          .build();
+
+      var resultPage = underTest.list(inputQueryForMaxPageSize);
+
+      assertThat(resultPage.size()).isEqualTo(100);
+    }
+
+    @Test
+    void shouldRejectZeroPage() {
+      var inputQueryForZeroPage = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .page(0)
+          .build();
+
+      var thrown = catchThrowable(() -> underTest.list(inputQueryForZeroPage));
+
+      assertThat(thrown).isInstanceOf(InvalidPageRequestException.class);
+    }
+
+    @Test
+    void shouldRejectZeroSize() {
+      var inputQueryForZeroSize = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .size(0)
+          .build();
+
+      var thrown = catchThrowable(() -> underTest.list(inputQueryForZeroSize));
+
+      assertThat(thrown).isInstanceOf(InvalidPageRequestException.class);
+    }
+
+    @Test
+    void shouldRejectTooLargeSize() {
+      var inputQueryForTooLargeSize = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .size(101)
+          .build();
+
+      var thrown = catchThrowable(() -> underTest.list(inputQueryForTooLargeSize));
+
+      assertThat(thrown).isInstanceOf(InvalidPageRequestException.class);
     }
 
     private List<Customer> storeCustomers(int count) {

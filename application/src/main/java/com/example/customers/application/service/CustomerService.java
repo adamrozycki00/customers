@@ -1,5 +1,6 @@
 package com.example.customers.application.service;
 
+import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
@@ -15,21 +16,22 @@ import com.example.customers.domain.customer.PublicId;
 import com.example.customers.domain.customer.exception.CustomerNotFoundException;
 import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.tenant.TenantId;
-import lombok.RequiredArgsConstructor;
+import lombok.Builder;
 
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.nonNull;
 
-@RequiredArgsConstructor
-public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, ListCustomersUseCase, DeleteCustomerUseCase {
+@Builder
+public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, ListCustomersUseCase,
+    DeleteCustomerUseCase {
 
   private static final int DEFAULT_PAGE = 1;
-  private static final int DEFAULT_PAGE_SIZE = 20;
 
   private final CustomerPort customerPort;
   private final GenericFieldPort genericFieldPort;
+  private final PagingSettings pagingSettings;
 
   @Override
   public Customer create(CreateCustomerUseCase.Command command) {
@@ -66,10 +68,17 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
   public CustomerPage list(ListCustomersUseCase.Query query) {
     var tenantId = new TenantId(query.tenantId());
     int page = nonNull(query.page()) ? query.page() : DEFAULT_PAGE;
-    int size = nonNull(query.size()) ? query.size() : DEFAULT_PAGE_SIZE;
+    int size = nonNull(query.size()) ? query.size() : pagingSettings.defaultPageSize();
+    validatePageSize(size);
     var pageRequest = new PageRequest(page, size);
 
     return customerPort.getPage(tenantId, pageRequest);
+  }
+
+  private void validatePageSize(int size) {
+    if (size > pagingSettings.maxPageSize()) {
+      throw new InvalidPageRequestException();
+    }
   }
 
   @Override
