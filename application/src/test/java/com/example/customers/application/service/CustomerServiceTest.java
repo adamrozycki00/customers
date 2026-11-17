@@ -35,7 +35,7 @@ class CustomerServiceTest {
   private final InMemoryCustomerDbAdapter customerRepo = new InMemoryCustomerDbAdapter();
   private final InMemoryGenericFieldDbAdapter genericFieldRepo = new InMemoryGenericFieldDbAdapter();
 
-  private final PagingSettings pagingSettings = new PagingSettings(20, 100);
+  private final PagingSettings pagingSettings = new PagingSettings(7, 15);
 
   private final CustomerService underTest = CustomerService.builder()
       .customerPort(customerRepo)
@@ -194,11 +194,11 @@ class CustomerServiceTest {
       var inputQueryWithoutPaging = ListCustomersUseCase.Query.builder()
           .tenantId("flowers")
           .build();
-      var expectedCustomers = storedCustomers.subList(0, 20);
+      var expectedCustomers = storedCustomers.subList(0, 7);
       var expectedPage = CustomerPage.builder()
           .customers(expectedCustomers)
           .page(1)
-          .size(20)
+          .size(7)
           .totalElements(25)
           .build();
 
@@ -233,12 +233,12 @@ class CustomerServiceTest {
       storeCustomers(1);
       var inputQueryForMaxPageSize = ListCustomersUseCase.Query.builder()
           .tenantId("flowers")
-          .size(100)
+          .size(15)
           .build();
 
       var resultPage = underTest.list(inputQueryForMaxPageSize);
 
-      assertThat(resultPage.size()).isEqualTo(100);
+      assertThat(resultPage.size()).isEqualTo(15);
     }
 
     @Test
@@ -269,7 +269,7 @@ class CustomerServiceTest {
     void shouldRejectTooLargeSize() {
       var inputQueryForTooLargeSize = ListCustomersUseCase.Query.builder()
           .tenantId("flowers")
-          .size(101)
+          .size(16)
           .build();
 
       var thrown = catchThrowable(() -> underTest.list(inputQueryForTooLargeSize));
