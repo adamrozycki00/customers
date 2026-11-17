@@ -9,6 +9,7 @@ import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.exception.CustomerNotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
@@ -45,7 +46,8 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
     var genericFieldsToUpdate = buildGenericFieldsToUpdate(tenantGenericFields, rawGenericFieldsToUpdate);
     var customerUpdate = buildCustomerUpdate(command, genericFieldsToUpdate);
 
-    return customerPort.update(tenantId, publicId, customerUpdate).orElseThrow();
+    return customerPort.update(tenantId, publicId, customerUpdate)
+        .orElseThrow(CustomerNotFoundException::new);
   }
 
   private static GenericFieldsToUpdate buildGenericFieldsToUpdate(TenantGenericFields tenantGenericFields,

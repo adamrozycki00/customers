@@ -7,6 +7,7 @@ import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.exception.CustomerNotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
@@ -23,6 +24,7 @@ import java.util.Set;
 
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 class UpdateCustomerServiceTest {
@@ -252,6 +254,18 @@ class UpdateCustomerServiceTest {
     var resultCustomer = underTest.update(inputCommand);
 
     assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldRejectUnknownCustomer() {
+    var inputCommandForUnknownCustomer = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .publicId("CUST-404")
+        .build();
+
+    var thrown = catchThrowable(() -> underTest.update(inputCommandForUnknownCustomer));
+
+    assertThat(thrown).isInstanceOf(CustomerNotFoundException.class);
   }
 
   private void registerVipField() {
