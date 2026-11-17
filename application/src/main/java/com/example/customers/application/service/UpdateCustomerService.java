@@ -16,11 +16,7 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
@@ -47,8 +43,8 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
     var registeredFields = genericFieldPort.findAllByTenant(tenantId);
     var tenantGenericFields = TenantGenericFields.of(registeredFields);
     var rawGenericFieldsToUpdate = getRawGenericFieldsToUpdate(command);
-    var genericFieldChanges = buildGenericFieldsToUpdate(tenantGenericFields, rawGenericFieldsToUpdate);
-    var customerUpdate = buildCustomerUpdate(command, genericFieldChanges.toSet(), genericFieldChanges.toClear());
+    var genericFieldsToUpdate = buildGenericFieldsToUpdate(tenantGenericFields, rawGenericFieldsToUpdate);
+    var customerUpdate = buildCustomerUpdate(command, genericFieldsToUpdate);
 
     return customerPort.update(tenantId, publicId, customerUpdate).orElseThrow();
   }
@@ -115,10 +111,8 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
         .toList();
   }
 
-  private static CustomerUpdate buildCustomerUpdate(
-      UpdateCustomerUseCase.Command command,
-      Map<FieldName, GenericFieldValue> genericFieldsToSet,
-      Set<FieldName> genericFieldsToClear) {
+  private static CustomerUpdate buildCustomerUpdate(UpdateCustomerUseCase.Command command,
+                                                    UpdateCustomerService.GenericFieldsToUpdate genericFieldsToUpdate) {
     var fieldMask = command.fieldMask();
     var firstNameChange = fieldMask.contains(FIRST_NAME_PATH)
         ? toFieldChange(command.firstName(), FirstName::new)
@@ -129,8 +123,8 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
     return CustomerUpdate.builder()
         .firstName(firstNameChange)
         .lastName(lastNameChange)
-        .genericFieldsToSet(genericFieldsToSet)
-        .genericFieldsToClear(genericFieldsToClear)
+        .genericFieldsToSet(genericFieldsToUpdate.toSet())
+        .genericFieldsToClear(genericFieldsToUpdate.toClear())
         .build();
   }
 
