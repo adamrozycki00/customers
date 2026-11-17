@@ -1,13 +1,13 @@
 package com.example.customers.application.adapter;
 
-import com.example.customers.application.port.out.GenericFieldRepository;
+import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class InMemoryGenericFieldRepository implements GenericFieldRepository {
+public class InMemoryGenericFieldDbAdapter implements GenericFieldPort {
 
   private final List<GenericField> fields = new ArrayList<>();
 

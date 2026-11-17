@@ -1,6 +1,6 @@
 package com.example.customers.application.service;
 
-import com.example.customers.application.adapter.InMemoryGenericFieldRepository;
+import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
 import com.example.customers.application.port.in.RegisterGenericFieldUseCase;
 import com.example.customers.application.port.in.RegisterGenericFieldUseCase.Command;
 import com.example.customers.domain.genericfield.FieldName;
@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class RegisterGenericFieldServiceTest {
 
-  private final InMemoryGenericFieldRepository repo = new InMemoryGenericFieldRepository();
+  private final InMemoryGenericFieldDbAdapter repo = new InMemoryGenericFieldDbAdapter();
   private final RegisterGenericFieldUseCase registerGenericField = new RegisterGenericFieldService(repo);
 
   @Test

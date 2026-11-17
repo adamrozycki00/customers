@@ -5,7 +5,7 @@ import com.example.customers.domain.tenant.TenantId;
 
 import java.util.List;
 
-public interface GenericFieldRepository {
+public interface GenericFieldPort {
 
   GenericField insert(GenericField field);
 
