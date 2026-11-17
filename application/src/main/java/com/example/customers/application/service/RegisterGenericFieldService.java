@@ -19,10 +19,12 @@ public class RegisterGenericFieldService implements RegisterGenericFieldUseCase 
     var name = new FieldName(command.name());
     var type = FieldType.of(command.type());
 
-    return GenericField.builder()
+    var field = GenericField.builder()
         .tenantId(tenantId)
         .name(name)
         .type(type)
         .build();
+
+    return genericFieldPort.insert(field);
   }
 }

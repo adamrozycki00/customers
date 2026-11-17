@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RegisterGenericFieldServiceTest {
 
   private final InMemoryGenericFieldDbAdapter repo = new InMemoryGenericFieldDbAdapter();
-  private final RegisterGenericFieldUseCase registerGenericField = new RegisterGenericFieldService(repo);
+  private final RegisterGenericFieldUseCase underTest = new RegisterGenericFieldService(repo);
 
   @Test
   void shouldReturnRegisteredField() {
@@ -31,8 +31,26 @@ class RegisterGenericFieldServiceTest {
         .type(FieldType.BOOLEAN)
         .build();
 
-    var resultField = registerGenericField.register(inputCommand);
+    var resultField = underTest.register(inputCommand);
 
     assertThat(resultField).usingRecursiveComparison().isEqualTo(expectedField);
+  }
+
+  @Test
+  void shouldStoreRegisteredField() {
+    var inputCommand = Command.builder()
+        .tenantId("flowers")
+        .name("vip")
+        .type("BOOLEAN")
+        .build();
+    var tenantId = new TenantId("flowers");
+    var expectedName = new FieldName("vip");
+
+    underTest.register(inputCommand);
+
+    var resultStoredFields = repo.findAllByTenant(tenantId);
+    assertThat(resultStoredFields)
+        .extracting(GenericField::getName)
+        .containsExactly(expectedName);
   }
 }
