@@ -1,10 +1,9 @@
 package com.example.customers.domain.genericfield;
 
-import com.example.customers.domain.genericfield.exception.InvalidFieldNameException;
-
-import java.util.regex.Pattern;
-
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+import com.example.customers.domain.genericfield.exception.InvalidFieldNameException;
+import java.util.regex.Pattern;
 
 public record FieldName(String value) {
 

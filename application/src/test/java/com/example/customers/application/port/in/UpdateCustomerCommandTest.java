@@ -1,12 +1,11 @@
 package com.example.customers.application.port.in;
 
-import com.example.customers.application.exception.InvalidFieldMaskException;
-import org.junit.jupiter.api.Test;
-
-import java.util.Set;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+
+import com.example.customers.application.exception.InvalidFieldMaskException;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
 class UpdateCustomerCommandTest {
 

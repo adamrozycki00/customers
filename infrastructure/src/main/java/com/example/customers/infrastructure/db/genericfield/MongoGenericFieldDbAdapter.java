@@ -1,11 +1,17 @@
 package com.example.customers.infrastructure.db.genericfield;
 
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.gte;
+import static com.mongodb.client.model.Filters.lte;
+
 import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.genericfield.exception.DuplicateFieldNameException;
 import com.example.customers.domain.tenant.TenantId;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.MaxKey;
@@ -13,13 +19,6 @@ import org.bson.types.MinKey;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.gte;
-import static com.mongodb.client.model.Filters.lte;
 
 @Component
 @RequiredArgsConstructor

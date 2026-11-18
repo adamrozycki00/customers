@@ -1,5 +1,10 @@
 package com.example.customers.domain.genericfield;
 
+import static java.time.ZoneOffset.UTC;
+import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
+import static java.util.Arrays.stream;
+import static java.util.Objects.isNull;
+
 import com.example.customers.domain.genericfield.exception.InvalidFieldTypeException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValueException;
 import com.example.customers.domain.genericfield.value.BooleanValue;
@@ -7,16 +12,10 @@ import com.example.customers.domain.genericfield.value.DatetimeValue;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
-
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-
-import static java.time.ZoneOffset.UTC;
-import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
-import static java.util.Arrays.stream;
-import static java.util.Objects.isNull;
 
 public enum FieldType {
   BOOLEAN,

@@ -1,5 +1,7 @@
 package com.example.customers.application.service;
 
+import static java.util.Objects.nonNull;
+
 import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.PageRequest;
@@ -17,8 +19,6 @@ import com.example.customers.domain.customer.exception.CustomerNotFoundException
 import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.Builder;
-
-import static java.util.Objects.nonNull;
 
 @Builder
 public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, ListCustomersUseCase,

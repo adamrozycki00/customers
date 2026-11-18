@@ -1,10 +1,10 @@
 package com.example.customers.application.port.in;
 
-import com.example.customers.application.exception.InvalidPageRequestException;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+
+import com.example.customers.application.exception.InvalidPageRequestException;
+import org.junit.jupiter.api.Test;
 
 class ListCustomersQueryTest {
 

@@ -1,11 +1,11 @@
 package com.example.customers.domain.tenant;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 import com.example.customers.domain.tenant.exception.InvalidTenantIdException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 class TenantIdTest {
 

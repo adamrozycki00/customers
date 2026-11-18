@@ -1,5 +1,9 @@
 package com.example.customers.application.service;
 
+import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
 import com.example.customers.application.exception.InvalidPageRequestException;
@@ -19,16 +23,11 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static java.util.Collections.emptyMap;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class CustomerServiceTest {
 

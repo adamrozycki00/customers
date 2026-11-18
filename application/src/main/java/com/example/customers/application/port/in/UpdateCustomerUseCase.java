@@ -1,15 +1,14 @@
 package com.example.customers.application.port.in;
 
-import com.example.customers.application.exception.InvalidFieldMaskException;
-import com.example.customers.domain.customer.Customer;
-import lombok.Builder;
-
-import java.util.Map;
-import java.util.Set;
-
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.nonNull;
+
+import com.example.customers.application.exception.InvalidFieldMaskException;
+import com.example.customers.domain.customer.Customer;
+import java.util.Map;
+import java.util.Set;
+import lombok.Builder;
 
 public interface UpdateCustomerUseCase {
 

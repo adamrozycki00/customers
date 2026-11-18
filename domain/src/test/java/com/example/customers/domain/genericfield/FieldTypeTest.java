@@ -1,19 +1,18 @@
 package com.example.customers.domain.genericfield;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 import com.example.customers.domain.genericfield.exception.InvalidFieldTypeException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValueException;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigInteger;
 import java.time.Instant;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class FieldTypeTest {
 

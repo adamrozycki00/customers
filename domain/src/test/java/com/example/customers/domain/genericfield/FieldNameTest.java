@@ -1,11 +1,11 @@
 package com.example.customers.domain.genericfield;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 import com.example.customers.domain.genericfield.exception.InvalidFieldNameException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 class FieldNameTest {
 

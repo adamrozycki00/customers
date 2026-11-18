@@ -1,10 +1,10 @@
 package com.example.customers.application.port.in;
 
+import static java.util.Objects.nonNull;
+
 import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
 import lombok.Builder;
-
-import static java.util.Objects.nonNull;
 
 public interface ListCustomersUseCase {
 

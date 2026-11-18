@@ -1,5 +1,7 @@
 package com.example.customers.application.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
 import com.example.customers.application.port.in.RegisterGenericFieldUseCase;
 import com.example.customers.application.port.in.RegisterGenericFieldUseCase.Command;
@@ -8,8 +10,6 @@ import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GenericFieldServiceTest {
 

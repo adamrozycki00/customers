@@ -1,5 +1,10 @@
 package com.example.customers.infrastructure.db.customer;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 import com.example.customers.TestcontainersConfiguration;
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.CustomerUpdate;
@@ -17,6 +22,12 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.domain.tenant.TenantId;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,18 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 @DataMongoTest
 @Import({TestcontainersConfiguration.class, MongoCustomerDbAdapter.class})

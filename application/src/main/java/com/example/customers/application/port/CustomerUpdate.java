@@ -4,10 +4,9 @@ import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
-import lombok.Builder;
-
 import java.util.Map;
 import java.util.Set;
+import lombok.Builder;
 
 @Builder
 public record CustomerUpdate(

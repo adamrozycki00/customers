@@ -1,9 +1,9 @@
 package com.example.customers.domain.customer;
 
-import com.example.customers.domain.customer.exception.InvalidLastNameException;
-
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
+
+import com.example.customers.domain.customer.exception.InvalidLastNameException;
 
 public record LastName(String value) {
 

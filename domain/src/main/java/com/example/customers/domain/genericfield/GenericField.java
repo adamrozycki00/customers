@@ -1,13 +1,13 @@
 package com.example.customers.domain.genericfield;
 
+import static java.util.Objects.isNull;
+
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldException;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-
-import static java.util.Objects.isNull;
 
 @Getter
 @ToString

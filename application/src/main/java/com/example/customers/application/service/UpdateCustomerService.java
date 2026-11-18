@@ -1,5 +1,15 @@
 package com.example.customers.application.service;
 
+import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.FIRST_NAME_PATH;
+import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.GENERIC_FIELDS_PATH_PREFIX;
+import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.LAST_NAME_PATH;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+
 import com.example.customers.application.port.CustomerUpdate;
 import com.example.customers.application.port.FieldUpdate;
 import com.example.customers.application.port.in.UpdateCustomerUseCase;
@@ -15,20 +25,13 @@ import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
-import lombok.RequiredArgsConstructor;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
-
-import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.FIRST_NAME_PATH;
-import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.GENERIC_FIELDS_PATH_PREFIX;
-import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.LAST_NAME_PATH;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class UpdateCustomerService implements UpdateCustomerUseCase {

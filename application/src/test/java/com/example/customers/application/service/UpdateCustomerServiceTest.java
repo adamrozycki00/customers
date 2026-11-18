@@ -1,5 +1,10 @@
 package com.example.customers.application.service;
 
+import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+
 import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
 import com.example.customers.application.port.in.UpdateCustomerUseCase;
@@ -15,17 +20,11 @@ import com.example.customers.domain.genericfield.exception.InvalidGenericFieldVa
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
-import org.junit.jupiter.api.Test;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static java.util.Collections.emptyMap;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import org.junit.jupiter.api.Test;
 
 class UpdateCustomerServiceTest {
 

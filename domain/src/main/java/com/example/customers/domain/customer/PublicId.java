@@ -1,10 +1,9 @@
 package com.example.customers.domain.customer;
 
-import com.example.customers.domain.customer.exception.InvalidPublicIdException;
-
-import java.util.regex.Pattern;
-
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+import com.example.customers.domain.customer.exception.InvalidPublicIdException;
+import java.util.regex.Pattern;
 
 public record PublicId(String value) {
 

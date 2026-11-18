@@ -1,11 +1,12 @@
 package com.example.customers.domain.genericfield;
 
+import static lombok.AccessLevel.PRIVATE;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+
 import com.example.customers.domain.genericfield.exception.InvalidFieldNameException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValueException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
-import lombok.RequiredArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -14,9 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
-import static lombok.AccessLevel.PRIVATE;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = PRIVATE)
 public final class TenantGenericFields {

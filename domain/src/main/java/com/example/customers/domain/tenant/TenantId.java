@@ -1,10 +1,9 @@
 package com.example.customers.domain.tenant;
 
-import com.example.customers.domain.tenant.exception.InvalidTenantIdException;
-
-import java.util.regex.Pattern;
-
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+import com.example.customers.domain.tenant.exception.InvalidTenantIdException;
+import java.util.regex.Pattern;
 
 public record TenantId(String value) {
 
