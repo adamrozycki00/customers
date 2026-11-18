@@ -26,6 +26,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenericFieldResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   parameters:
@@ -37,7 +43,55 @@ components:
       schema:
         type: string
 
+  responses:
+    BadRequest:
+      description: The request is invalid; `detail` says why.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    Conflict:
+      description: The resource already exists; `detail` says which.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    InternalServerError:
+      description: An unexpected error; the details are logged, not returned.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
   schemas:
+    Problem:
+      type: object
+      description: Error details as defined by RFC 9457.
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Bad Request
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME
+        instance:
+          type: string
+          example: /generic-fields
+        errors:
+          type: array
+          description: The offending generic field names, when generic field values are rejected.
+          items:
+            type: string
+          example: [vipp, ghost]
+
     RegisterGenericFieldRequest:
       type: object
       required:

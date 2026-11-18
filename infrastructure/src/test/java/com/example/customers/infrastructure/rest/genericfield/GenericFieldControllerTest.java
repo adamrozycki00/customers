@@ -52,7 +52,8 @@ class GenericFieldControllerTest {
         .uri("/generic-fields")
         .header("X-Tenant-Id", "flowers")
         .contentType(APPLICATION_JSON)
-        .content(inputRequest);
+        .content(inputRequest)
+        .exchange();
 
     assertThat(resultResponse).hasStatus(CREATED)
         .bodyJson().isStrictlyEqualTo(expectedResponse);

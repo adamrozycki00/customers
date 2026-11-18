@@ -1,6 +1,9 @@
 spring:
   application:
     name: customers
+  mvc:
+    problemdetails:
+      enabled: true
 
 customers:
   paging:
