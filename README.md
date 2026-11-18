@@ -7,7 +7,10 @@ A multi-tenant service that stores customer records. Each tenant can register it
 Prerequisites: JDK 25 and a running Docker daemon. Maven is provided through the wrapper.
 
 ```shell
-# Build and run all tests (integration tests start MongoDB via Testcontainers)
+# Unit tests and MongoDB adapter tests (the adapter tests start MongoDB via Testcontainers)
+./mvnw test
+
+# Everything above plus the end-to-end tests (*IT, package com.example.customers.it)
 ./mvnw verify
 
 # Run the application (MongoDB is started automatically from compose.yaml)

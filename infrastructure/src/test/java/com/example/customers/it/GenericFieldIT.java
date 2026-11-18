@@ -1,4 +1,4 @@
-package com.example.customers.infrastructure.rest;
+package com.example.customers.it;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @AutoConfigureRestTestClient
-class GenericFieldApiTest {
+class GenericFieldIT {
 
   private static final String GENERIC_FIELDS_COLLECTION = "genericFields";
 
