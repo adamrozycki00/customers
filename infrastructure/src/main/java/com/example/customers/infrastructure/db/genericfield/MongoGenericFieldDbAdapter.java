@@ -35,10 +35,10 @@ public class MongoGenericFieldDbAdapter implements GenericFieldPort {
 
   @Override
   public GenericField insert(GenericField field) {
-    var document = toDocument(field);
+    var doc = toDoc(field);
 
     try {
-      mongoTemplate.insert(document, COLLECTION);
+      mongoTemplate.insert(doc, COLLECTION);
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldNameException();
     }
@@ -68,7 +68,7 @@ public class MongoGenericFieldDbAdapter implements GenericFieldPort {
     return fields;
   }
 
-  private static Document toDocument(GenericField field) {
+  private static Document toDoc(GenericField field) {
     var tenantId = field.getTenantId();
     var name = field.getName();
     var type = field.getType();
@@ -78,11 +78,11 @@ public class MongoGenericFieldDbAdapter implements GenericFieldPort {
         .append(TYPE, type.name());
   }
 
-  private static GenericField toDomain(Document document) {
-    var id = document.get(ID, Document.class);
+  private static GenericField toDomain(Document doc) {
+    var id = doc.get(ID, Document.class);
     var rawTenantId = id.getString(TENANT_ID);
     var rawName = id.getString(NAME);
-    var rawType = document.getString(TYPE);
+    var rawType = doc.getString(TYPE);
     var tenantId = new TenantId(rawTenantId);
     var name = new FieldName(rawName);
     var type = FieldType.of(rawType);

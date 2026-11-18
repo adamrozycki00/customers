@@ -58,14 +58,14 @@ class MongoGenericFieldDbAdapterTest {
         .build();
     var expectedId = new Document("tenantId", "flowers")
         .append("name", "vip");
-    var expectedDocument = new Document("_id", expectedId)
+    var expectedDoc = new Document("_id", expectedId)
         .append("type", "BOOLEAN");
-    var expectedJson = expectedDocument.toJson();
+    var expectedJson = expectedDoc.toJson();
 
     underTest.insert(inputField);
 
-    var storedDocuments = mongoTemplate.findAll(Document.class, GENERIC_FIELDS_COLLECTION);
-    assertThat(storedDocuments).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
+    var storedDocs = mongoTemplate.findAll(Document.class, GENERIC_FIELDS_COLLECTION);
+    assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
   }
 
   @Test
@@ -154,8 +154,8 @@ class MongoGenericFieldDbAdapterTest {
   private void storeFieldDocument(String tenantId, String name, String type) {
     var storedId = new Document("tenantId", tenantId)
         .append("name", name);
-    var storedDocument = new Document("_id", storedId)
+    var storedDoc = new Document("_id", storedId)
         .append("type", type);
-    mongoTemplate.insert(storedDocument, GENERIC_FIELDS_COLLECTION);
+    mongoTemplate.insert(storedDoc, GENERIC_FIELDS_COLLECTION);
   }
 }
