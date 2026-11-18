@@ -1,5 +1,6 @@
 package com.example.customers.infrastructure.db.customer;
 
+import static java.time.ZoneOffset.UTC;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.domain.tenant.TenantId;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,14 +37,19 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @DataMongoTest
-@Import({TestcontainersConfiguration.class, MongoCustomerDbAdapter.class})
+@Import({TestcontainersConfiguration.class, MongoCustomerDbAdapterTest.FixedClockConfiguration.class,
+    MongoCustomerDbAdapter.class})
 class MongoCustomerDbAdapterTest {
 
   private static final String CUSTOMERS_COLLECTION = "customers";
+  private static final Instant NOW = Instant.parse("2026-11-18T12:00:00Z");
+  private static final Instant EARLIER_DELETED_AT = Instant.parse("2026-01-15T09:30:00Z");
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -642,6 +649,43 @@ class MongoCustomerDbAdapterTest {
     }
   }
 
+  @Nested
+  class Delete {
+
+    @Test
+    void shouldSetDeletedAt() {
+      storeCustomerDocWithNames();
+      var expectedDeletedAt = Date.from(NOW);
+
+      underTest.delete(tenantId, publicId);
+
+      var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
+      assertThat(resultStoredDoc).isNotNull();
+      assertThat(resultStoredDoc.get("deletedAt")).isEqualTo(expectedDeletedAt);
+    }
+
+    @Test
+    void shouldKeepFirstDeletedAt() {
+      storeDeletedCustomerDoc("flowers", "CUST-1");
+      var expectedDeletedAt = Date.from(EARLIER_DELETED_AT);
+
+      underTest.delete(tenantId, publicId);
+
+      var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
+      assertThat(resultStoredDoc).isNotNull();
+      assertThat(resultStoredDoc.get("deletedAt")).isEqualTo(expectedDeletedAt);
+    }
+  }
+
+  @TestConfiguration(proxyBeanMethods = false)
+  static class FixedClockConfiguration {
+
+    @Bean
+    Clock fixedClock() {
+      return Clock.fixed(NOW, UTC);
+    }
+  }
+
   private void enableProfiler() {
     var profileAllOperations = new Document("profile", 2);
     mongoTemplate.getDb().runCommand(profileAllOperations);
@@ -676,8 +720,7 @@ class MongoCustomerDbAdapterTest {
   private void storeDeletedCustomerDoc(String tenantId, String publicId) {
     var storedId = new Document("tenantId", tenantId)
         .append("publicId", publicId);
-    var instant = Instant.parse("2026-01-15T09:30:00Z");
-    var storedDate = Date.from(instant);
+    var storedDate = Date.from(EARLIER_DELETED_AT);
     var storedDeletedDoc = new Document("_id", storedId)
         .append("deletedAt", storedDate);
     mongoTemplate.insert(storedDeletedDoc, CUSTOMERS_COLLECTION);

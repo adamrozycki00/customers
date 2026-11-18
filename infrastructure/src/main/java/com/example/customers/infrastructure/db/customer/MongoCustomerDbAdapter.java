@@ -32,6 +32,7 @@ import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.domain.tenant.TenantId;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -63,6 +64,7 @@ public class MongoCustomerDbAdapter implements CustomerPort {
   private static final Bson NOT_DELETED_FILTER = eq(DELETED_AT, null);
 
   private final MongoTemplate mongoTemplate;
+  private final Clock clock;
 
   @Override
   public Customer insert(Customer customer) {
@@ -140,6 +142,16 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     return Optional.empty();
   }
 
+  @Override
+  public void delete(TenantId tenantId, PublicId publicId) {
+    var activeCustomerFilter = toActiveCustomerFilter(tenantId, publicId);
+    var now = clock.instant();
+    var deletedAt = Date.from(now);
+    var setDeletedAt = set(DELETED_AT, deletedAt);
+    mongoTemplate.getCollection(COLLECTION)
+        .updateOne(activeCustomerFilter, setDeletedAt);
+  }
+
   private static boolean hasNoUpdates(CustomerUpdate update) {
     return update.firstName() instanceof FieldUpdate.Keep<FirstName>
         && update.lastName() instanceof FieldUpdate.Keep<LastName>
@@ -187,10 +199,6 @@ public class MongoCustomerDbAdapter implements CustomerPort {
       case FieldUpdate.Keep<T> _ -> {
       }
     }
-  }
-
-  @Override
-  public void delete(TenantId tenantId, PublicId publicId) {
   }
 
   private static Bson toActiveCustomerFilter(TenantId tenantId, PublicId publicId) {
@@ -294,10 +302,12 @@ public class MongoCustomerDbAdapter implements CustomerPort {
 
   private static Document toDoc(Map<FieldName, GenericFieldValue> genericFields) {
     var doc = new Document();
+
     genericFields.forEach((name, value) -> {
       var bsonValue = toBsonValue(value);
       doc.append(name.value(), bsonValue);
     });
+
     return doc;
   }
 
