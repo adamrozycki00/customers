@@ -1,0 +1,67 @@
+openapi: 3.0.3
+info:
+  title: Customers API
+  description: Multi-tenant customer records with tenant-defined, typed generic fields.
+  version: 1.0.0
+
+paths:
+  /generic-fields:
+    post:
+      tags:
+        - GenericFields
+      operationId: registerGenericField
+      summary: Register a generic field for the tenant
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterGenericFieldRequest'
+      responses:
+        '201':
+          description: The field is registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericFieldResponse'
+
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: The tenant the request acts for. Alphanumeric, `_` or `-`, at most 64 characters.
+      schema:
+        type: string
+
+  schemas:
+    RegisterGenericFieldRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          description: A letter, then letters, digits or `_`; at most 64 characters; case-sensitive.
+          example: vip
+        type:
+          type: string
+          description: One of `BOOLEAN`, `STRING`, `INTEGER`, `DATETIME` (case-insensitive).
+          example: BOOLEAN
+
+    GenericFieldResponse:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          example: vip
+        type:
+          type: string
+          example: BOOLEAN

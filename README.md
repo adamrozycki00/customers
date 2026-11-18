@@ -17,6 +17,8 @@ Prerequisites: JDK 25 and a running Docker daemon. Maven is provided through the
 
 ## API
 
+The API is specified contract-first in OpenAPI: [`infrastructure/src/main/resources/openapi.yaml`](infrastructure/src/main/resources/openapi.yaml). The controller interfaces and request/response classes are generated from it at build time. JSON properties use `snake_case`.
+
 Every request must carry the `X-Tenant-Id` header.
 
 | Method | Path | Purpose |
@@ -32,9 +34,9 @@ Example customer payload:
 
 ```json
 {
-  "publicId": "C-1",
-  "firstName": "Ann",
-  "genericFields": {
+  "public_id": "C-1",
+  "first_name": "Ann",
+  "generic_fields": {
     "vip": true,
     "score": 42,
     "date_of_birth": "1990-05-20T00:00:00Z"
