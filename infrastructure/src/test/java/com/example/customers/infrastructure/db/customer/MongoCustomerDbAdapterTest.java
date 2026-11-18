@@ -565,6 +565,81 @@ class MongoCustomerDbAdapterTest {
       assertThat(resultStoredDoc.get("genericFields")).isEqualTo(expectedStoredGenericFields);
       assertThat(resultCustomer).get().extracting(Customer::getGenericFields).isEqualTo(expectedGenericFields);
     }
+
+    @Test
+    void shouldNotUpdateDeletedCustomer() {
+      // given a deleted customer and an update replacing the first name
+      storeDeletedCustomerDoc("flowers", "CUST-1");
+      var newFirstName = new FirstName("Maria");
+      var replaceFirstName = new FieldUpdate.Replace<>(newFirstName);
+      var keepLastName = new FieldUpdate.Keep<LastName>();
+      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
+      Set<FieldName> noGenericFieldsToClear = emptySet();
+      var inputUpdate = CustomerUpdate.builder()
+          .firstName(replaceFirstName)
+          .lastName(keepLastName)
+          .genericFieldsToSet(noGenericFieldsToSet)
+          .genericFieldsToClear(noGenericFieldsToClear)
+          .build();
+      var expectedStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+
+      var resultStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      assertThat(resultCustomer).isEmpty();
+      assertThat(resultStoredDocs).isEqualTo(expectedStoredDocs);
+    }
+
+    @Test
+    void shouldNotCreateMissingCustomerOnUpdate() {
+      // given no stored customer and an update replacing the first name
+      var newFirstName = new FirstName("Maria");
+      var replaceFirstName = new FieldUpdate.Replace<>(newFirstName);
+      var keepLastName = new FieldUpdate.Keep<LastName>();
+      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
+      Set<FieldName> noGenericFieldsToClear = emptySet();
+      var inputUpdate = CustomerUpdate.builder()
+          .firstName(replaceFirstName)
+          .lastName(keepLastName)
+          .genericFieldsToSet(noGenericFieldsToSet)
+          .genericFieldsToClear(noGenericFieldsToClear)
+          .build();
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+
+      var resultStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      assertThat(resultCustomer).isEmpty();
+      assertThat(resultStoredDocs).isEmpty();
+    }
+
+    @Test
+    void shouldReturnCustomerUnchangedForEmptyUpdate() {
+      // given that Anna Smith is stored and an empty update
+      storeCustomerDocWithNames();
+      var keepFirstName = new FieldUpdate.Keep<FirstName>();
+      var keepLastName = new FieldUpdate.Keep<LastName>();
+      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
+      Set<FieldName> noGenericFieldsToClear = emptySet();
+      var inputEmptyUpdate = CustomerUpdate.builder()
+          .firstName(keepFirstName)
+          .lastName(keepLastName)
+          .genericFieldsToSet(noGenericFieldsToSet)
+          .genericFieldsToClear(noGenericFieldsToClear)
+          .build();
+      var expectedStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      var expectedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .lastName(lastName)
+          .build();
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputEmptyUpdate);
+
+      var resultStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
+      assertThat(resultStoredDocs).isEqualTo(expectedStoredDocs);
+    }
   }
 
   private void enableProfiler() {

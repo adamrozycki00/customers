@@ -5,6 +5,8 @@ import org.springframework.boot.SpringApplication;
 public class TestCustomersApplication {
 
   static void main(String[] args) {
-    SpringApplication.from(CustomersApplication::main).with(TestcontainersConfiguration.class).run(args);
+    SpringApplication.from(CustomersApplication::main)
+        .with(TestcontainersConfiguration.class)
+        .run(args);
   }
 }

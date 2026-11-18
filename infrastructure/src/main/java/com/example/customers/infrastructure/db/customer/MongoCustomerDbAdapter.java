@@ -10,6 +10,8 @@ import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.set;
 import static com.mongodb.client.model.Updates.unset;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.MapUtils.isEmpty;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 
 import com.example.customers.application.port.CustomerPage;
@@ -77,9 +79,7 @@ public class MongoCustomerDbAdapter implements CustomerPort {
 
   @Override
   public Optional<Customer> find(TenantId tenantId, PublicId publicId) {
-    var id = toId(tenantId, publicId);
-    var idFilter = eq(ID, id);
-    var activeCustomerFilter = and(idFilter, NOT_DELETED_FILTER);
+    var activeCustomerFilter = toActiveCustomerFilter(tenantId, publicId);
     var doc = mongoTemplate.getCollection(COLLECTION)
         .find(activeCustomerFilter)
         .first();
@@ -122,12 +122,15 @@ public class MongoCustomerDbAdapter implements CustomerPort {
 
   @Override
   public Optional<Customer> update(TenantId tenantId, PublicId publicId, CustomerUpdate update) {
-    var id = toId(tenantId, publicId);
-    var idFilter = eq(ID, id);
+    if (hasNoUpdates(update)) {
+      return find(tenantId, publicId);
+    }
+
+    var activeCustomerFilter = toActiveCustomerFilter(tenantId, publicId);
     var updates = toUpdateBson(update);
     var returnUpdatedDoc = new FindOneAndUpdateOptions().returnDocument(AFTER);
     var doc = mongoTemplate.getCollection(COLLECTION)
-        .findOneAndUpdate(idFilter, updates, returnUpdatedDoc);
+        .findOneAndUpdate(activeCustomerFilter, updates, returnUpdatedDoc);
 
     if (nonNull(doc)) {
       var customer = toDomain(doc);
@@ -135,6 +138,13 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     }
 
     return Optional.empty();
+  }
+
+  private static boolean hasNoUpdates(CustomerUpdate update) {
+    return update.firstName() instanceof FieldUpdate.Keep<FirstName>
+        && update.lastName() instanceof FieldUpdate.Keep<LastName>
+        && isEmpty(update.genericFieldsToSet())
+        && isEmpty(update.genericFieldsToClear());
   }
 
   private static Bson toUpdateBson(CustomerUpdate update) {
@@ -181,6 +191,12 @@ public class MongoCustomerDbAdapter implements CustomerPort {
 
   @Override
   public void delete(TenantId tenantId, PublicId publicId) {
+  }
+
+  private static Bson toActiveCustomerFilter(TenantId tenantId, PublicId publicId) {
+    var id = toId(tenantId, publicId);
+    var idFilter = eq(ID, id);
+    return and(idFilter, NOT_DELETED_FILTER);
   }
 
   private static Bson toTenantIdRangeFilter(TenantId tenantId) {
