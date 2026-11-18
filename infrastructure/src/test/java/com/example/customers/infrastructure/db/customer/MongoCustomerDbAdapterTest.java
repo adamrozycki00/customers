@@ -5,6 +5,7 @@ import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.exception.DuplicatePublicIdException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;
@@ -26,6 +27,7 @@ import java.util.Date;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 @DataMongoTest
 @Import({TestcontainersConfiguration.class, MongoCustomerDbAdapter.class})
@@ -79,16 +81,16 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldStoreGenericValuesAsNativeTypes() {
-      var vipValue = new BooleanValue(true);
-      var noteValue = new StringValue("prefers tulips");
-      var scoreValue = new IntegerValue(42);
-      var since = Instant.parse("2024-03-01T10:00:00Z");
-      var sinceValue = new DatetimeValue(since);
+      var inputBoolean = new BooleanValue(true);
+      var inputString = new StringValue("prefers tulips");
+      var inputInteger = new IntegerValue(42);
+      var instant = Instant.parse("2024-03-01T10:00:00Z");
+      var inputDatetime = new DatetimeValue(instant);
       Map<FieldName, GenericFieldValue> inputGenericFields = Map.of(
-          vipName, vipValue,
-          noteName, noteValue,
-          scoreName, scoreValue,
-          sinceName, sinceValue);
+          vipName, inputBoolean,
+          noteName, inputString,
+          scoreName, inputInteger,
+          sinceName, inputDatetime);
       var inputCustomer = Customer.builder()
           .tenantId(tenantId)
           .publicId(publicId)
@@ -96,17 +98,170 @@ class MongoCustomerDbAdapterTest {
           .lastName(lastName)
           .genericFields(inputGenericFields)
           .build();
-      var expectedSince = Date.from(since);
+      var expectedDate = Date.from(instant);
       var expectedGenericFields = new Document("vip", true)
           .append("note", "prefers tulips")
           .append("score", 42L)
-          .append("since", expectedSince);
+          .append("since", expectedDate);
 
       underTest.insert(inputCustomer);
 
       var storedDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
       assertThat(storedDoc).isNotNull();
       assertThat(storedDoc.get("genericFields")).isEqualTo(expectedGenericFields);
+    }
+
+    @Test
+    void shouldLeaveOutMissingOptionalFields() {
+      var inputCustomerWithoutNames = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .build();
+      var expectedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var expectedDoc = new Document("_id", expectedId);
+      var expectedJson = expectedDoc.toJson();
+
+      underTest.insert(inputCustomerWithoutNames);
+
+      var storedDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
+    }
+
+    @Test
+    void shouldRejectDuplicatePublicId() {
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var storedDoc = new Document("_id", storedId);
+      mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+      var inputCustomerWithDuplicatePublicId = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .build();
+
+      var thrown = catchThrowable(() -> underTest.insert(inputCustomerWithDuplicatePublicId));
+
+      assertThat(thrown).isInstanceOf(DuplicatePublicIdException.class);
+    }
+
+    @Test
+    void shouldRejectInsertingDeletedCustomer() {
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var deletedAt = Instant.parse("2026-01-15T09:30:00Z");
+      var storedDeletedAt = Date.from(deletedAt);
+      var storedDeletedDoc = new Document("_id", storedId)
+          .append("deletedAt", storedDeletedAt);
+      mongoTemplate.insert(storedDeletedDoc, CUSTOMERS_COLLECTION);
+      var inputCustomerReusingPublicId = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .build();
+
+      var thrown = catchThrowable(() -> underTest.insert(inputCustomerReusingPublicId));
+
+      assertThat(thrown).isInstanceOf(DuplicatePublicIdException.class);
+    }
+  }
+
+  @Nested
+  class Find {
+
+    @Test
+    void shouldFindCustomer() {
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var storedDoc = new Document("_id", storedId)
+          .append("firstName", "Anna")
+          .append("lastName", "Smith");
+      mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+      var expectedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .lastName(lastName)
+          .build();
+
+      var resultCustomer = underTest.find(tenantId, publicId);
+
+      assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
+    }
+
+    @Test
+    void shouldFindGenericValuesOfEveryType() {
+      var instant = Instant.parse("2024-03-01T10:00:00Z");
+      var storedDate = Date.from(instant);
+      var storedGenericFields = new Document("vip", true)
+          .append("note", "prefers tulips")
+          .append("score", 42L)
+          .append("since", storedDate);
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var storedDoc = new Document("_id", storedId)
+          .append("firstName", "Anna")
+          .append("lastName", "Smith")
+          .append("genericFields", storedGenericFields);
+      mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+      var expectedBoolean = new BooleanValue(true);
+      var expectedString = new StringValue("prefers tulips");
+      var expectedInteger = new IntegerValue(42);
+      var expectedDatetime = new DatetimeValue(instant);
+      var expectedGenericFields = Map.of(
+          vipName, expectedBoolean,
+          noteName, expectedString,
+          scoreName, expectedInteger,
+          sinceName, expectedDatetime);
+
+      var resultCustomer = underTest.find(tenantId, publicId);
+
+      assertThat(resultCustomer).get().extracting(Customer::getGenericFields).isEqualTo(expectedGenericFields);
+    }
+
+    @Test
+    void shouldFindCustomerWithoutOptionalFields() {
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var storedDocWithoutOptionalFields = new Document("_id", storedId);
+      mongoTemplate.insert(storedDocWithoutOptionalFields, CUSTOMERS_COLLECTION);
+      var expectedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .build();
+
+      var resultCustomer = underTest.find(tenantId, publicId);
+
+      assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
+    }
+
+    @Test
+    void shouldNotFindDeletedCustomer() {
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var instant = Instant.parse("2026-01-15T09:30:00Z");
+      var storedDate = Date.from(instant);
+      var storedDeletedDoc = new Document("_id", storedId)
+          .append("firstName", "Anna")
+          .append("deletedAt", storedDate);
+      mongoTemplate.insert(storedDeletedDoc, CUSTOMERS_COLLECTION);
+
+      var resultCustomer = underTest.find(tenantId, publicId);
+
+      assertThat(resultCustomer).isEmpty();
+    }
+
+    @Test
+    void shouldNotFindCustomerOfOtherTenant() {
+      var storedIdWithSamePublicIdOfOtherTenant = new Document("tenantId", "trees")
+          .append("publicId", publicId.value());
+      var storedDocOfOtherTenant = new Document("_id", storedIdWithSamePublicIdOfOtherTenant)
+          .append("firstName", "Anna");
+      mongoTemplate.insert(storedDocOfOtherTenant, CUSTOMERS_COLLECTION);
+
+      var resultCustomer = underTest.find(tenantId, publicId);
+
+      assertThat(resultCustomer).isEmpty();
     }
   }
 }
