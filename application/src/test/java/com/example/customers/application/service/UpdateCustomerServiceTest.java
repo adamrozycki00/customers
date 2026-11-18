@@ -42,6 +42,7 @@ class UpdateCustomerServiceTest {
 
   @Test
   void shouldSetFirstName() {
+    // given that Anna Smith is stored and a command sets the first name to Maria
     storeCustomer();
     Set<String> firstNameMask = Set.of("firstName");
     var inputCommand = UpdateCustomerUseCase.Command.builder()
@@ -85,6 +86,7 @@ class UpdateCustomerServiceTest {
 
   @Test
   void shouldSetLastName() {
+    // given that Anna Smith is stored and a command sets the last name to Nowak
     storeCustomer();
     Set<String> lastNameMask = Set.of("lastName");
     var inputCommand = UpdateCustomerUseCase.Command.builder()
@@ -128,6 +130,7 @@ class UpdateCustomerServiceTest {
 
   @Test
   void shouldSetGenericField() {
+    // given a registered vip field and a command setting vip to true
     registerVipField();
     storeCustomer();
     Set<String> vipMask = Set.of("genericFields.vip");
@@ -155,6 +158,7 @@ class UpdateCustomerServiceTest {
 
   @Test
   void shouldClearGenericField() {
+    // given a customer with vip set and a command clearing it
     registerVipField();
     var storedVipValue = new BooleanValue(true);
     Map<FieldName, GenericFieldValue> storedGenericFields = Map.of(vipName, storedVipValue);
@@ -176,6 +180,7 @@ class UpdateCustomerServiceTest {
 
   @Test
   void shouldRejectSettingUnregisteredGenericField() {
+    // given a command setting the unregistered field vipp
     registerVipField();
     storeCustomer();
     Set<String> unregisteredFieldMask = Set.of("genericFields.vipp");
@@ -195,6 +200,7 @@ class UpdateCustomerServiceTest {
 
   @Test
   void shouldRejectClearingUnregisteredGenericField() {
+    // given a command clearing the unregistered field vipp
     registerVipField();
     storeCustomer();
     Set<String> unregisteredFieldMask = Set.of("genericFields.vipp");
@@ -215,6 +221,7 @@ class UpdateCustomerServiceTest {
 
   @Test
   void shouldReportInvalidFieldNamesFromSetAndClearTogether() {
+    // given a command setting vipp and clearing ghost, both unregistered
     registerVipField();
     storeCustomer();
     Set<String> unregisteredFieldsMask = Set.of("genericFields.vipp", "genericFields.ghost");

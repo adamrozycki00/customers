@@ -1,7 +1,20 @@
 package com.example.customers.infrastructure.db.customer;
 
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.gte;
+import static com.mongodb.client.model.Filters.lte;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static com.mongodb.client.model.Sorts.ascending;
+import static com.mongodb.client.model.Updates.combine;
+import static com.mongodb.client.model.Updates.set;
+import static com.mongodb.client.model.Updates.unset;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.collections4.MapUtils.isNotEmpty;
+
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.CustomerUpdate;
+import com.example.customers.application.port.FieldUpdate;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
@@ -16,6 +29,14 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.domain.tenant.TenantId;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -24,20 +45,6 @@ import org.bson.types.MinKey;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.gte;
-import static com.mongodb.client.model.Filters.lte;
-import static com.mongodb.client.model.Sorts.ascending;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 
 @Component
 @RequiredArgsConstructor
@@ -76,8 +83,13 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     var doc = mongoTemplate.getCollection(COLLECTION)
         .find(activeCustomerFilter)
         .first();
-    return Optional.ofNullable(doc)
-        .map(MongoCustomerDbAdapter::toDomain);
+
+    if (nonNull(doc)) {
+      var customer = toDomain(doc);
+      return Optional.of(customer);
+    }
+
+    return Optional.empty();
   }
 
   @Override
@@ -110,7 +122,61 @@ public class MongoCustomerDbAdapter implements CustomerPort {
 
   @Override
   public Optional<Customer> update(TenantId tenantId, PublicId publicId, CustomerUpdate update) {
+    var id = toId(tenantId, publicId);
+    var idFilter = eq(ID, id);
+    var updates = toUpdateBson(update);
+    var returnUpdatedDoc = new FindOneAndUpdateOptions().returnDocument(AFTER);
+    var doc = mongoTemplate.getCollection(COLLECTION)
+        .findOneAndUpdate(idFilter, updates, returnUpdatedDoc);
+
+    if (nonNull(doc)) {
+      var customer = toDomain(doc);
+      return Optional.of(customer);
+    }
+
     return Optional.empty();
+  }
+
+  private static Bson toUpdateBson(CustomerUpdate update) {
+    var updates = new ArrayList<Bson>();
+    addNameUpdate(updates, FIRST_NAME, update.firstName(), FirstName::value);
+    addNameUpdate(updates, LAST_NAME, update.lastName(), LastName::value);
+
+    update.genericFieldsToSet().forEach((name, value) -> {
+      var path = toGenericFieldPath(name);
+      var bsonValue = toBsonValue(value);
+      var setGenericField = set(path, bsonValue);
+      updates.add(setGenericField);
+    });
+
+    update.genericFieldsToClear().forEach(name -> {
+      var path = toGenericFieldPath(name);
+      var unsetGenericField = unset(path);
+      updates.add(unsetGenericField);
+    });
+
+    return combine(updates);
+  }
+
+  private static String toGenericFieldPath(FieldName name) {
+    return GENERIC_FIELDS + "." + name.value();
+  }
+
+  private static <T> void addNameUpdate(List<Bson> updates, String fieldName, FieldUpdate<T> nameUpdate,
+                                        Function<T, String> toRawName) {
+    switch (nameUpdate) {
+      case FieldUpdate.Replace<T> replace -> {
+        var rawName = toRawName.apply(replace.value());
+        var setName = set(fieldName, rawName);
+        updates.add(setName);
+      }
+      case FieldUpdate.Clear<T> _ -> {
+        var unsetName = unset(fieldName);
+        updates.add(unsetName);
+      }
+      case FieldUpdate.Keep<T> _ -> {
+      }
+    }
   }
 
   @Override

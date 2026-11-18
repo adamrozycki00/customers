@@ -48,6 +48,7 @@ class CustomerServiceTest {
 
     @Test
     void shouldReturnCreatedCustomer() {
+      // given a registered vip field and a command creating Anna Smith with vip set
       var tenantId = new TenantId("flowers");
       var vipName = new FieldName("vip");
       var vipField = GenericField.builder()
@@ -136,6 +137,7 @@ class CustomerServiceTest {
 
     @Test
     void shouldReturnExistingCustomer() {
+      // given that Anna is stored
       var tenantId = new TenantId("flowers");
       var publicId = new PublicId("CUST-1");
       var firstName = new FirstName("Anna");
@@ -167,6 +169,7 @@ class CustomerServiceTest {
 
     @Test
     void shouldDeleteCustomer() {
+      // given that a customer is stored
       var tenantId = new TenantId("flowers");
       var publicId = new PublicId("CUST-1");
       var storedCustomer = Customer.builder()

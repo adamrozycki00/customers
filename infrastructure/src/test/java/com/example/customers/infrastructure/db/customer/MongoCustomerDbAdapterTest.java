@@ -2,6 +2,8 @@ package com.example.customers.infrastructure.db.customer;
 
 import com.example.customers.TestcontainersConfiguration;
 import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.CustomerUpdate;
+import com.example.customers.application.port.FieldUpdate;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
@@ -30,7 +32,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -92,6 +97,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldStoreGenericValuesAsNativeTypes() {
+      // given a customer with one generic value of each type
       var inputBoolean = new BooleanValue(true);
       var inputString = new StringValue("prefers tulips");
       var inputInteger = new IntegerValue(42);
@@ -173,12 +179,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldFindCustomer() {
-      var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
-      var storedDoc = new Document("_id", storedId)
-          .append("firstName", "Anna")
-          .append("lastName", "Smith");
-      mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+      storeCustomerDocWithNames();
       var expectedCustomer = Customer.builder()
           .tenantId(tenantId)
           .publicId(publicId)
@@ -193,6 +194,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldFindGenericValuesOfEveryType() {
+      // given a stored customer with one generic value of each type
       var instant = Instant.parse("2024-03-01T10:00:00Z");
       var storedDate = Date.from(instant);
       var storedGenericFields = new Document("vip", true)
@@ -265,6 +267,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldGetPageOrderedByPublicId() {
+      // given three customers stored out of order
       storeCustomerDoc("flowers", "CUST-3");
       storeCustomerDoc("flowers", "CUST-1");
       storeCustomerDoc("flowers", "CUST-2");
@@ -281,6 +284,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldGetRequestedPage() {
+      // given five customers and a request for page 2 of size 2
       storeCustomerDoc("flowers", "CUST-1");
       storeCustomerDoc("flowers", "CUST-2");
       storeCustomerDoc("flowers", "CUST-3");
@@ -312,6 +316,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldLeaveOutDeletedCustomers() {
+      // given three customers, of which CUST-2 is deleted
       storeCustomerDoc("flowers", "CUST-1");
       storeDeletedCustomerDoc("flowers", "CUST-2");
       storeCustomerDoc("flowers", "CUST-3");
@@ -341,6 +346,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldGetOnlyCustomersOfGivenTenant() {
+      // given customers of flowers and trees
       storeCustomerDoc("flowers", "CUST-1");
       storeCustomerDoc("trees", "CUST-2");
       storeCustomerDoc("flowers", "CUST-3");
@@ -370,6 +376,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldGetPageUsingIndex() {
+      // given customers of two tenants and the profiler on
       storeCustomerDoc("flowers", "CUST-1");
       storeCustomerDoc("trees", "CUST-2");
       var inputPageRequest = new PageRequest(1, 10);
@@ -380,6 +387,184 @@ class MongoCustomerDbAdapterTest {
 
       var planSummaries = getPlanSummaries();
       assertThat(planSummaries).hasSize(2).containsOnly(expectedPlanSummary);
+    }
+  }
+
+  @Nested
+  class Update {
+
+    @Test
+    void shouldReplaceNames() {
+      // given that Anna Smith is stored and an update replacing both names
+      storeCustomerDocWithNames();
+      var newFirstName = new FirstName("Maria");
+      var newLastName = new LastName("Nowak");
+      var replaceFirstName = new FieldUpdate.Replace<>(newFirstName);
+      var replaceLastName = new FieldUpdate.Replace<>(newLastName);
+      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
+      Set<FieldName> noGenericFieldsToClear = emptySet();
+      var inputUpdate = CustomerUpdate.builder()
+          .firstName(replaceFirstName)
+          .lastName(replaceLastName)
+          .genericFieldsToSet(noGenericFieldsToSet)
+          .genericFieldsToClear(noGenericFieldsToClear)
+          .build();
+      var expectedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var expectedDoc = new Document("_id", expectedId)
+          .append("firstName", "Maria")
+          .append("lastName", "Nowak");
+      var expectedJson = expectedDoc.toJson();
+      var expectedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(newFirstName)
+          .lastName(newLastName)
+          .build();
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+
+      var storedDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
+      assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
+    }
+
+    @Test
+    void shouldClearNames() {
+      // given that Anna Smith is stored and an update clearing both names
+      storeCustomerDocWithNames();
+      var clearFirstName = new FieldUpdate.Clear<FirstName>();
+      var clearLastName = new FieldUpdate.Clear<LastName>();
+      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
+      Set<FieldName> noGenericFieldsToClear = emptySet();
+      var inputUpdate = CustomerUpdate.builder()
+          .firstName(clearFirstName)
+          .lastName(clearLastName)
+          .genericFieldsToSet(noGenericFieldsToSet)
+          .genericFieldsToClear(noGenericFieldsToClear)
+          .build();
+      var expectedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var expectedDoc = new Document("_id", expectedId);
+      var expectedJson = expectedDoc.toJson();
+      var expectedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .build();
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+
+      var storedDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
+      assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
+    }
+
+    @Test
+    void shouldLeaveKeptNameUnchanged() {
+      // given that Anna Smith is stored and an update replacing only the first name
+      storeCustomerDocWithNames();
+      var newFirstName = new FirstName("Maria");
+      var replaceFirstName = new FieldUpdate.Replace<>(newFirstName);
+      var keepLastName = new FieldUpdate.Keep<LastName>();
+      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
+      Set<FieldName> noGenericFieldsToClear = emptySet();
+      var inputUpdate = CustomerUpdate.builder()
+          .firstName(replaceFirstName)
+          .lastName(keepLastName)
+          .genericFieldsToSet(noGenericFieldsToSet)
+          .genericFieldsToClear(noGenericFieldsToClear)
+          .build();
+      var expectedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var expectedDoc = new Document("_id", expectedId)
+          .append("firstName", "Maria")
+          .append("lastName", "Smith");
+      var expectedJson = expectedDoc.toJson();
+      var expectedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(newFirstName)
+          .lastName(lastName)
+          .build();
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+
+      var storedDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
+      assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
+      assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
+    }
+
+    @Test
+    void shouldSetGenericFieldsKeepingOthers() {
+      // given a customer with vip and note, and an update setting vip and score
+      var storedGenericFields = new Document("vip", true)
+          .append("note", "prefers tulips");
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var storedDoc = new Document("_id", storedId)
+          .append("genericFields", storedGenericFields);
+      mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+      var inputBoolean = new BooleanValue(false);
+      var inputInteger = new IntegerValue(42);
+      Map<FieldName, GenericFieldValue> inputGenericFieldsToSet = Map.of(
+          vipName, inputBoolean,
+          scoreName, inputInteger);
+      var keepFirstName = new FieldUpdate.Keep<FirstName>();
+      var keepLastName = new FieldUpdate.Keep<LastName>();
+      Set<FieldName> noGenericFieldsToClear = emptySet();
+      var inputUpdate = CustomerUpdate.builder()
+          .firstName(keepFirstName)
+          .lastName(keepLastName)
+          .genericFieldsToSet(inputGenericFieldsToSet)
+          .genericFieldsToClear(noGenericFieldsToClear)
+          .build();
+      var expectedStoredGenericFields = new Document("vip", false)
+          .append("note", "prefers tulips")
+          .append("score", 42L);
+      var expectedString = new StringValue("prefers tulips");
+      var expectedGenericFields = Map.of(
+          vipName, inputBoolean,
+          noteName, expectedString,
+          scoreName, inputInteger);
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+
+      var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
+      assertThat(resultStoredDoc).isNotNull();
+      assertThat(resultStoredDoc.get("genericFields")).isEqualTo(expectedStoredGenericFields);
+      assertThat(resultCustomer).get().extracting(Customer::getGenericFields).isEqualTo(expectedGenericFields);
+    }
+
+    @Test
+    void shouldClearGenericFields() {
+      // given a customer with vip and note, and an update clearing vip
+      var storedGenericFields = new Document("vip", true)
+          .append("note", "prefers tulips");
+      var storedId = new Document("tenantId", "flowers")
+          .append("publicId", "CUST-1");
+      var storedDoc = new Document("_id", storedId)
+          .append("genericFields", storedGenericFields);
+      mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+      var keepFirstName = new FieldUpdate.Keep<FirstName>();
+      var keepLastName = new FieldUpdate.Keep<LastName>();
+      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
+      Set<FieldName> inputGenericFieldsToClear = Set.of(vipName);
+      var inputUpdate = CustomerUpdate.builder()
+          .firstName(keepFirstName)
+          .lastName(keepLastName)
+          .genericFieldsToSet(noGenericFieldsToSet)
+          .genericFieldsToClear(inputGenericFieldsToClear)
+          .build();
+      var expectedStoredGenericFields = new Document("note", "prefers tulips");
+      var expectedString = new StringValue("prefers tulips");
+      var expectedGenericFields = Map.of(noteName, expectedString);
+
+      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+
+      var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
+      assertThat(resultStoredDoc).isNotNull();
+      assertThat(resultStoredDoc.get("genericFields")).isEqualTo(expectedStoredGenericFields);
+      assertThat(resultCustomer).get().extracting(Customer::getGenericFields).isEqualTo(expectedGenericFields);
     }
   }
 
@@ -402,6 +587,15 @@ class MongoCustomerDbAdapterTest {
     var storedId = new Document("tenantId", tenantId)
         .append("publicId", publicId);
     var storedDoc = new Document("_id", storedId);
+    mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+  }
+
+  private void storeCustomerDocWithNames() {
+    var storedId = new Document("tenantId", "flowers")
+        .append("publicId", "CUST-1");
+    var storedDoc = new Document("_id", storedId)
+        .append("firstName", "Anna")
+        .append("lastName", "Smith");
     mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
   }
 

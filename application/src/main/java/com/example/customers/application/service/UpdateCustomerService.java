@@ -115,21 +115,21 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
   private static CustomerUpdate buildCustomerUpdate(UpdateCustomerUseCase.Command command,
                                                     UpdateCustomerService.GenericFieldsToUpdate genericFieldsToUpdate) {
     var fieldMask = command.fieldMask();
-    var firstNameChange = fieldMask.contains(FIRST_NAME_PATH)
-        ? toFieldChange(command.firstName(), FirstName::new)
+    var firstNameUpdate = fieldMask.contains(FIRST_NAME_PATH)
+        ? toFieldUpdate(command.firstName(), FirstName::new)
         : new FieldUpdate.Keep<FirstName>();
-    var lastNameChange = fieldMask.contains(LAST_NAME_PATH)
-        ? toFieldChange(command.lastName(), LastName::new)
+    var lastNameUpdate = fieldMask.contains(LAST_NAME_PATH)
+        ? toFieldUpdate(command.lastName(), LastName::new)
         : new FieldUpdate.Keep<LastName>();
     return CustomerUpdate.builder()
-        .firstName(firstNameChange)
-        .lastName(lastNameChange)
+        .firstName(firstNameUpdate)
+        .lastName(lastNameUpdate)
         .genericFieldsToSet(genericFieldsToUpdate.toSet())
         .genericFieldsToClear(genericFieldsToUpdate.toClear())
         .build();
   }
 
-  private static <T> FieldUpdate<T> toFieldChange(String rawValue, Function<String, T> toField) {
+  private static <T> FieldUpdate<T> toFieldUpdate(String rawValue, Function<String, T> toField) {
     if (nonNull(rawValue)) {
       var field = toField.apply(rawValue);
       return new FieldUpdate.Replace<>(field);
