@@ -4,6 +4,9 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 
 customers:
   paging:

@@ -12,7 +12,11 @@ import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 import com.example.customers.application.port.in.RegisterGenericFieldUseCase;
 import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.exception.ValidationException;
+import com.example.customers.domain.genericfield.FieldName;
+import com.example.customers.domain.genericfield.FieldType;
+import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
+import com.example.customers.domain.tenant.TenantId;
 import com.example.customers.infrastructure.rest.genericfield.GenericFieldController;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -184,6 +188,40 @@ class RestExceptionHandlerTest {
         .header("X-Tenant-Id", "flowers")
         .contentType(APPLICATION_JSON)
         .content(inputMalformedRequest)
+        .exchange();
+
+    assertThat(resultResponse).hasStatus(BAD_REQUEST)
+        .hasContentType(APPLICATION_PROBLEM_JSON)
+        .bodyJson().isLenientlyEqualTo(expectedResponse);
+  }
+
+  @Test
+  void shouldReturnBadRequestForUnknownProperty() {
+    // given a use case that would register the field and a request with an unknown property
+    var tenantId = new TenantId("flowers");
+    var vipName = new FieldName("vip");
+    var registeredField = GenericField.builder()
+        .tenantId(tenantId)
+        .name(vipName)
+        .type(FieldType.BOOLEAN)
+        .build();
+    given(registerGenericFieldUseCase.register(any())).willReturn(registeredField);
+    String inputRequestWithUnknownProperty = """
+        {"name": "vip", "type": "BOOLEAN", "color": "gold"}
+        """;
+    String expectedResponse = """
+        {
+          "status": 400,
+          "title": "Bad Request",
+          "detail": "Failed to read request"
+        }
+        """;
+
+    var resultResponse = mockMvc.post()
+        .uri("/generic-fields")
+        .header("X-Tenant-Id", "flowers")
+        .contentType(APPLICATION_JSON)
+        .content(inputRequestWithUnknownProperty)
         .exchange();
 
     assertThat(resultResponse).hasStatus(BAD_REQUEST)

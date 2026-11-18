@@ -1,5 +1,6 @@
 package com.example.customers.infrastructure.rest.customer;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,8 +12,10 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
+import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
+import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
@@ -26,6 +29,7 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.tenant.TenantId;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -45,6 +49,9 @@ class CustomerControllerTest {
 
   @MockitoBean
   private GetCustomerUseCase getCustomerUseCase;
+
+  @MockitoBean
+  private ListCustomersUseCase listCustomersUseCase;
 
   private final TenantId tenantId = new TenantId("flowers");
   private final PublicId publicId = new PublicId("CUST-1");
@@ -230,6 +237,84 @@ class CustomerControllerTest {
       assertThat(resultResponse).hasStatus(NOT_FOUND)
           .hasContentType(APPLICATION_PROBLEM_JSON)
           .bodyJson().isLenientlyEqualTo(expectedResponse);
+    }
+  }
+
+  @Nested
+  class ListCustomers {
+
+    @Test
+    void shouldListCustomers() {
+      // given that the use case returns page 2 of size 5 with CUST-6 and CUST-7 for the expected query
+      var expectedQuery = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .page(2)
+          .size(5)
+          .build();
+      var sixthPublicId = new PublicId("CUST-6");
+      var seventhPublicId = new PublicId("CUST-7");
+      var sixthCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(sixthPublicId)
+          .build();
+      var seventhCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(seventhPublicId)
+          .build();
+      var storedCustomers = List.of(sixthCustomer, seventhCustomer);
+      var storedPage = CustomerPage.builder()
+          .customers(storedCustomers)
+          .page(2)
+          .size(5)
+          .totalElements(7)
+          .build();
+      given(listCustomersUseCase.list(expectedQuery)).willReturn(storedPage);
+      String expectedResponse = """
+          {
+            "customers": [
+              {"public_id": "CUST-6", "generic_fields": {}},
+              {"public_id": "CUST-7", "generic_fields": {}}
+            ],
+            "page": 2,
+            "size": 5,
+            "total_elements": 7
+          }
+          """;
+
+      var resultResponse = mockMvc.get()
+          .uri("/customers?page=2&size=5")
+          .header("X-Tenant-Id", "flowers")
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(OK)
+          .bodyJson().isStrictlyEqualTo(expectedResponse);
+    }
+
+    @Test
+    void shouldPassMissingPagingAsNull() {
+      // given that the use case returns an empty first page for a query without page and size
+      var expectedQueryWithoutPaging = ListCustomersUseCase.Query.builder()
+          .tenantId("flowers")
+          .build();
+      List<Customer> noCustomers = emptyList();
+      var emptyPage = CustomerPage.builder()
+          .customers(noCustomers)
+          .page(1)
+          .size(20)
+          .totalElements(0)
+          .build();
+      given(listCustomersUseCase.list(expectedQueryWithoutPaging)).willReturn(emptyPage);
+      String expectedResponse = """
+          {"customers": [], "page": 1, "size": 20, "total_elements": 0}
+          """;
+
+      var resultResponse = mockMvc.get()
+          .uri("/customers")
+          .header("X-Tenant-Id", "flowers")
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(OK)
+          .bodyJson().isStrictlyEqualTo(expectedResponse);
     }
   }
 }

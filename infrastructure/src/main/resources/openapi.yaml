@@ -34,6 +34,38 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /customers:
+    get:
+      tags:
+        - Customers
+      operationId: listCustomers
+      summary: List the tenant's customers, ordered by public id
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: page
+          in: query
+          required: false
+          description: 1-based page number; 1 when left out.
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: query
+          required: false
+          description: Page size; the configured default (20) when left out, at most the configured maximum (100).
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: One page of customers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       tags:
         - Customers
@@ -159,6 +191,7 @@ components:
 
     RegisterGenericFieldRequest:
       type: object
+      additionalProperties: false
       required:
         - name
         - type
@@ -187,6 +220,7 @@ components:
 
     CreateCustomerRequest:
       type: object
+      additionalProperties: false
       required:
         - public_id
       properties:
@@ -236,3 +270,28 @@ components:
             vip: true
             score: 42
             since: '2024-03-01T10:00:00Z'
+
+    CustomerPageResponse:
+      type: object
+      required:
+        - customers
+        - page
+        - size
+        - total_elements
+      properties:
+        customers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerResponse'
+        page:
+          type: integer
+          format: int32
+          example: 1
+        size:
+          type: integer
+          format: int32
+          example: 20
+        total_elements:
+          type: integer
+          format: int64
+          example: 42

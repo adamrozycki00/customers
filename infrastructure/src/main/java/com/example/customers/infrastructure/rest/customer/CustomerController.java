@@ -2,8 +2,10 @@ package com.example.customers.infrastructure.rest.customer;
 
 import static java.util.Objects.nonNull;
 
+import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
+import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
@@ -13,6 +15,7 @@ import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.infrastructure.rest.api.CustomersApi;
 import com.example.customers.infrastructure.rest.api.model.CreateCustomerRequest;
+import com.example.customers.infrastructure.rest.api.model.CustomerPageResponse;
 import com.example.customers.infrastructure.rest.api.model.CustomerResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +28,7 @@ public class CustomerController implements CustomersApi {
 
   private final CreateCustomerUseCase createCustomerUseCase;
   private final GetCustomerUseCase getCustomerUseCase;
+  private final ListCustomersUseCase listCustomersUseCase;
 
   @Override
   public CustomerResponse createCustomer(String xTenantId, CreateCustomerRequest request) {
@@ -44,6 +48,24 @@ public class CustomerController implements CustomersApi {
     var query = new GetCustomerUseCase.Query(xTenantId, publicId);
     var customer = getCustomerUseCase.get(query);
     return toResponse(customer);
+  }
+
+  @Override
+  public CustomerPageResponse listCustomers(String xTenantId, Integer page, Integer size) {
+    var query = ListCustomersUseCase.Query.builder()
+        .tenantId(xTenantId)
+        .page(page)
+        .size(size)
+        .build();
+    var customerPage = listCustomersUseCase.list(query);
+    return toPageResponse(customerPage);
+  }
+
+  private static CustomerPageResponse toPageResponse(CustomerPage customerPage) {
+    var customers = customerPage.customers().stream()
+        .map(CustomerController::toResponse)
+        .toList();
+    return new CustomerPageResponse(customers, customerPage.page(), customerPage.size(), customerPage.totalElements());
   }
 
   private static CustomerResponse toResponse(Customer customer) {
