@@ -5,6 +5,7 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -16,6 +17,7 @@ import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
+import com.example.customers.application.port.in.UpdateCustomerUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
@@ -29,8 +31,10 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.tenant.TenantId;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +56,9 @@ class CustomerControllerTest {
 
   @MockitoBean
   private ListCustomersUseCase listCustomersUseCase;
+
+  @MockitoBean
+  private UpdateCustomerUseCase updateCustomerUseCase;
 
   private final TenantId tenantId = new TenantId("flowers");
   private final PublicId publicId = new PublicId("CUST-1");
@@ -311,6 +318,84 @@ class CustomerControllerTest {
       var resultResponse = mockMvc.get()
           .uri("/customers")
           .header("X-Tenant-Id", "flowers")
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(OK)
+          .bodyJson().isStrictlyEqualTo(expectedResponse);
+    }
+
+    @Test
+    void shouldReturnBadRequestForNonNumericPage() {
+      String expectedResponse = """
+          {
+            "status": 400,
+            "title": "Bad Request",
+            "detail": "Failed to convert 'page' with value: 'abc'"
+          }
+          """;
+
+      var resultResponse = mockMvc.get()
+          .uri("/customers?page=abc")
+          .header("X-Tenant-Id", "flowers")
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(BAD_REQUEST)
+          .hasContentType(APPLICATION_PROBLEM_JSON)
+          .bodyJson().isLenientlyEqualTo(expectedResponse);
+    }
+  }
+
+  @Nested
+  class Patch {
+
+    @Test
+    void shouldUpdateCustomer() {
+      // given that the use case updates names, sets vip and clears score for the expected command
+      Set<String> expectedFieldMask = Set.of("firstName", "lastName", "genericFields.vip", "genericFields.score");
+      Map<String, Object> expectedRawGenericFields = new HashMap<>();
+      expectedRawGenericFields.put("vip", false);
+      expectedRawGenericFields.put("score", null);
+      var expectedCommand = UpdateCustomerUseCase.Command.builder()
+          .tenantId("flowers")
+          .publicId("CUST-1")
+          .fieldMask(expectedFieldMask)
+          .firstName("Maria")
+          .lastName("Nowak")
+          .genericFields(expectedRawGenericFields)
+          .build();
+      var updatedFirstName = new FirstName("Maria");
+      var updatedLastName = new LastName("Nowak");
+      var updatedBoolean = new BooleanValue(false);
+      Map<FieldName, GenericFieldValue> updatedGenericFields = Map.of(vipName, updatedBoolean);
+      var updatedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(updatedFirstName)
+          .lastName(updatedLastName)
+          .genericFields(updatedGenericFields)
+          .build();
+      given(updateCustomerUseCase.update(expectedCommand)).willReturn(updatedCustomer);
+      String inputRequest = """
+          {
+            "first_name": "Maria",
+            "last_name": "Nowak",
+            "generic_fields": {"vip": false, "score": null}
+          }
+          """;
+      String expectedResponse = """
+          {
+            "public_id": "CUST-1",
+            "first_name": "Maria",
+            "last_name": "Nowak",
+            "generic_fields": {"vip": false}
+          }
+          """;
+
+      var resultResponse = mockMvc.patch()
+          .uri("/customers/CUST-1")
+          .header("X-Tenant-Id", "flowers")
+          .contentType(APPLICATION_JSON)
+          .content(inputRequest)
           .exchange();
 
       assertThat(resultResponse).hasStatus(OK)

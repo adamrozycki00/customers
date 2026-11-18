@@ -116,6 +116,38 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+    patch:
+      tags:
+        - Customers
+      operationId: updateCustomer
+      summary: Update the customer's names and generic field values
+      description: >
+        Changes only what the request mentions. Names are replaced when present and kept when left out or null;
+        they cannot be cleared. Inside generic_fields, a value sets the field, null clears it, and a missing key
+        keeps it. The public id cannot be changed.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatchRequest'
+      responses:
+        '200':
+          description: The updated customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   parameters:
     TenantId:
@@ -295,3 +327,23 @@ components:
           type: integer
           format: int64
           example: 42
+
+    CustomerPatchRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        first_name:
+          type: string
+          description: Replaces the first name when present; left out or null keeps it.
+          example: Maria
+        last_name:
+          type: string
+          description: Replaces the last name when present; left out or null keeps it.
+          example: Nowak
+        generic_fields:
+          type: object
+          description: A value sets the field, null clears it, a missing key keeps it.
+          additionalProperties: true
+          example:
+            vip: false
+            score: null
