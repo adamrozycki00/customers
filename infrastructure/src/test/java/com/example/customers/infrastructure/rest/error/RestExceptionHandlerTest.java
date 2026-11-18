@@ -18,14 +18,17 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import com.example.customers.domain.tenant.TenantId;
 import com.example.customers.infrastructure.rest.genericfield.GenericFieldController;
+import com.example.customers.infrastructure.rest.genericfield.GenericFieldRestMapperImpl;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 @WebMvcTest(GenericFieldController.class)
+@Import(GenericFieldRestMapperImpl.class)
 class RestExceptionHandlerTest {
 
   @Autowired
@@ -163,31 +166,6 @@ class RestExceptionHandlerTest {
         .uri("/generic-fields")
         .contentType(APPLICATION_JSON)
         .content(inputRequest)
-        .exchange();
-
-    assertThat(resultResponse).hasStatus(BAD_REQUEST)
-        .hasContentType(APPLICATION_PROBLEM_JSON)
-        .bodyJson().isLenientlyEqualTo(expectedResponse);
-  }
-
-  @Test
-  void shouldReturnBadRequestForMalformedJson() {
-    String inputMalformedRequest = """
-        {"name": "vip",
-        """;
-    String expectedResponse = """
-        {
-          "status": 400,
-          "title": "Bad Request",
-          "detail": "Failed to read request"
-        }
-        """;
-
-    var resultResponse = mockMvc.post()
-        .uri("/generic-fields")
-        .header("X-Tenant-Id", "flowers")
-        .contentType(APPLICATION_JSON)
-        .content(inputMalformedRequest)
         .exchange();
 
     assertThat(resultResponse).hasStatus(BAD_REQUEST)

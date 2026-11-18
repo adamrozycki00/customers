@@ -8,7 +8,7 @@ paths:
   /generic-fields:
     post:
       tags:
-        - GenericFields
+        - GenericField
       operationId: registerGenericField
       summary: Register a generic field for the tenant
       parameters:
@@ -36,7 +36,7 @@ paths:
   /customers:
     get:
       tags:
-        - Customers
+        - Customer
       operationId: listCustomers
       summary: List the tenant's customers, ordered by public id
       parameters:
@@ -68,7 +68,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
-        - Customers
+        - Customer
       operationId: createCustomer
       summary: Create a customer for the tenant
       parameters:
@@ -96,7 +96,7 @@ paths:
   /customers/{public_id}:
     get:
       tags:
-        - Customers
+        - Customer
       operationId: getCustomer
       summary: Read a customer of the tenant
       parameters:
@@ -118,7 +118,7 @@ paths:
 
     patch:
       tags:
-        - Customers
+        - Customer
       operationId: updateCustomer
       summary: Update the customer's names and generic field values
       description: >

@@ -1,8 +1,7 @@
 package com.example.customers.infrastructure.rest.genericfield;
 
 import com.example.customers.application.port.in.RegisterGenericFieldUseCase;
-import com.example.customers.domain.genericfield.GenericField;
-import com.example.customers.infrastructure.rest.api.GenericFieldsApi;
+import com.example.customers.infrastructure.rest.api.GenericFieldApi;
 import com.example.customers.infrastructure.rest.api.model.GenericFieldResponse;
 import com.example.customers.infrastructure.rest.api.model.RegisterGenericFieldRequest;
 import lombok.RequiredArgsConstructor;
@@ -10,24 +9,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class GenericFieldController implements GenericFieldsApi {
+public class GenericFieldController implements GenericFieldApi {
 
-  private final RegisterGenericFieldUseCase registerGenericFieldUseCase;
+  private final RegisterGenericFieldUseCase useCase;
+  private final GenericFieldRestMapper mapper;
 
   @Override
   public GenericFieldResponse registerGenericField(String xTenantId, RegisterGenericFieldRequest request) {
-    var command = RegisterGenericFieldUseCase.Command.builder()
-        .tenantId(xTenantId)
-        .name(request.getName())
-        .type(request.getType())
-        .build();
-    var registeredField = registerGenericFieldUseCase.register(command);
-    return toResponse(registeredField);
-  }
-
-  private static GenericFieldResponse toResponse(GenericField field) {
-    var name = field.getName();
-    var type = field.getType();
-    return new GenericFieldResponse(name.value(), type.name());
+    var command = mapper.toCommand(xTenantId, request);
+    var registeredField = useCase.register(command);
+    return mapper.toResponse(registeredField);
   }
 }
