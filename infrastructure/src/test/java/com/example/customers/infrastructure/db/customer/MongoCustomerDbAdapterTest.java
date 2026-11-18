@@ -15,7 +15,7 @@ import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
-import com.example.customers.domain.customer.exception.DuplicatePublicIdException;
+import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;
@@ -162,7 +162,8 @@ class MongoCustomerDbAdapterTest {
 
       var thrown = catchThrowable(() -> underTest.insert(inputCustomerWithDuplicatePublicId));
 
-      assertThat(thrown).isInstanceOf(DuplicatePublicIdException.class);
+      assertThat(thrown).isInstanceOf(ConflictException.class)
+          .hasMessage("Customer with this public id already exists");
     }
 
     @Test
@@ -176,7 +177,8 @@ class MongoCustomerDbAdapterTest {
 
       var thrown = catchThrowable(() -> underTest.insert(inputCustomerReusingPublicId));
 
-      assertThat(thrown).isInstanceOf(DuplicatePublicIdException.class);
+      assertThat(thrown).isInstanceOf(ConflictException.class)
+          .hasMessage("Customer with this public id already exists");
     }
   }
 

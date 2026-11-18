@@ -2,7 +2,7 @@ package com.example.customers.domain.genericfield;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import com.example.customers.domain.genericfield.exception.InvalidFieldNameException;
+import com.example.customers.domain.exception.ValidationException;
 import java.util.regex.Pattern;
 
 public record FieldName(String value) {
@@ -18,7 +18,8 @@ public record FieldName(String value) {
     if (isEmpty(name)
         || name.length() > MAX_LENGTH
         || !LETTER_THEN_LETTERS_DIGITS_OR_UNDERSCORES.matcher(name).matches()) {
-      throw new InvalidFieldNameException();
+      throw new ValidationException("Field name must start with a letter, contain only letters, digits or '_', and be at most "
+          + MAX_LENGTH + " characters");
     }
   }
 }

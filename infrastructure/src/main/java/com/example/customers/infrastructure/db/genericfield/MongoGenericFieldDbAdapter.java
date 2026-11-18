@@ -5,10 +5,10 @@ import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
 
 import com.example.customers.application.port.out.GenericFieldPort;
+import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
-import com.example.customers.domain.genericfield.exception.DuplicateFieldNameException;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ public class MongoGenericFieldDbAdapter implements GenericFieldPort {
     try {
       mongoTemplate.insert(doc, COLLECTION);
     } catch (DuplicateKeyException e) {
-      throw new DuplicateFieldNameException();
+      throw new ConflictException("Generic field already registered");
     }
 
     return field;

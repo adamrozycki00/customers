@@ -1,11 +1,11 @@
 package com.example.customers.domain.genericfield.exception;
 
-import com.example.customers.domain.exception.DomainValidationException;
+import com.example.customers.domain.exception.ValidationException;
 import java.util.List;
 import lombok.Getter;
 
 @Getter
-public class InvalidGenericFieldValuesException extends DomainValidationException {
+public class InvalidGenericFieldValuesException extends ValidationException {
 
   private final List<String> invalidFieldNames;
 

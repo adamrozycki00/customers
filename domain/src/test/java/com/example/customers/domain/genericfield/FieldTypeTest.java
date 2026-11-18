@@ -3,8 +3,7 @@ package com.example.customers.domain.genericfield;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.example.customers.domain.genericfield.exception.InvalidFieldTypeException;
-import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValueException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
@@ -74,7 +73,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.of(inputInvalidType));
 
-      assertThat(thrown).isInstanceOf(InvalidFieldTypeException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME");
     }
 
     @Test
@@ -83,7 +83,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.of(inputNullType));
 
-      assertThat(thrown).isInstanceOf(InvalidFieldTypeException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME");
     }
   }
 
@@ -106,7 +107,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.BOOLEAN.parse(inputNonBoolean));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Value must be a boolean");
     }
   }
 
@@ -129,7 +131,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.STRING.parse(inputNonString));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Value must be a string");
     }
 
     @Test
@@ -148,7 +151,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.STRING.parse(inputTooLongString));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("String value is required and must be at most 1024 characters");
     }
   }
 
@@ -181,7 +185,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.INTEGER.parse(inputFractionalNumber));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Value must be a whole number within 64 bits");
     }
 
     @Test
@@ -190,7 +195,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.INTEGER.parse(inputOutOfRangeNumber));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Value must be a whole number within 64 bits");
     }
 
     @Test
@@ -199,7 +205,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.INTEGER.parse(inputNumericString));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Value must be a whole number within 64 bits");
     }
   }
 
@@ -245,7 +252,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.DATETIME.parse(inputUnparseableDatetime));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Value must be an ISO-8601 datetime");
     }
 
     @Test
@@ -254,7 +262,8 @@ class FieldTypeTest {
 
       var thrown = catchThrowable(() -> FieldType.DATETIME.parse(inputNonStringDatetime));
 
-      assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Value must be an ISO-8601 datetime");
     }
   }
 }

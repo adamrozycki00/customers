@@ -3,7 +3,7 @@ package com.example.customers.domain.genericfield.value;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValueException;
+import com.example.customers.domain.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 class StringValueTest {
@@ -14,6 +14,7 @@ class StringValueTest {
 
     var thrown = catchThrowable(() -> new StringValue(inputNullString));
 
-    assertThat(thrown).isInstanceOf(InvalidGenericFieldValueException.class);
+    assertThat(thrown).isInstanceOf(ValidationException.class)
+        .hasMessage("String value is required and must be at most 1024 characters");
   }
 }

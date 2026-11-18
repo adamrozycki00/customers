@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
-import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
@@ -16,7 +15,8 @@ import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
-import com.example.customers.domain.customer.exception.CustomerNotFoundException;
+import com.example.customers.domain.exception.NotFoundException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
@@ -159,7 +159,8 @@ class CustomerServiceTest {
 
       var thrown = catchThrowable(() -> underTest.get(inputQueryForUnknownCustomer));
 
-      assertThat(thrown).isInstanceOf(CustomerNotFoundException.class);
+      assertThat(thrown).isInstanceOf(NotFoundException.class)
+          .hasMessage("Customer not found");
     }
   }
 
@@ -252,7 +253,8 @@ class CustomerServiceTest {
 
       var thrown = catchThrowable(() -> underTest.list(inputQueryForTooLargeSize));
 
-      assertThat(thrown).isInstanceOf(InvalidPageRequestException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Size must be at most 15");
     }
 
     private List<Customer> storeCustomers(int count) {

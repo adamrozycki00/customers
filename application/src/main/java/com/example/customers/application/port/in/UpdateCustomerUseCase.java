@@ -4,8 +4,8 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.nonNull;
 
-import com.example.customers.application.exception.InvalidFieldMaskException;
 import com.example.customers.domain.customer.Customer;
+import com.example.customers.domain.exception.ValidationException;
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
@@ -35,7 +35,7 @@ public interface UpdateCustomerUseCase {
 
     private static void validate(Set<String> fieldMask) {
       if (fieldMask.stream().anyMatch(Command::isUnknownPath)) {
-        throw new InvalidFieldMaskException();
+        throw new ValidationException("Only first_name, last_name and generic_fields can be updated");
       }
     }
 

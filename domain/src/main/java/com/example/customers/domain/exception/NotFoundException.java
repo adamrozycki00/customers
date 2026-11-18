@@ -1,4 +1,8 @@
 package com.example.customers.domain.exception;
 
-public abstract class NotFoundException extends RuntimeException {
+public class NotFoundException extends RuntimeException {
+
+  public NotFoundException(String message) {
+    super(message);
+  }
 }

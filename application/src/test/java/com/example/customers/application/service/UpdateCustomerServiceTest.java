@@ -12,7 +12,7 @@ import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
-import com.example.customers.domain.customer.exception.CustomerNotFoundException;
+import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
@@ -271,7 +271,8 @@ class UpdateCustomerServiceTest {
 
     var thrown = catchThrowable(() -> underTest.update(inputCommandForUnknownCustomer));
 
-    assertThat(thrown).isInstanceOf(CustomerNotFoundException.class);
+    assertThat(thrown).isInstanceOf(NotFoundException.class)
+        .hasMessage("Customer not found");
   }
 
   private void registerVipField() {

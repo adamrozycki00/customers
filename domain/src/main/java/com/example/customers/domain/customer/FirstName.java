@@ -1,9 +1,9 @@
 package com.example.customers.domain.customer;
 
+import com.example.customers.domain.exception.ValidationException;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 
-import com.example.customers.domain.customer.exception.InvalidFirstNameException;
 
 public record FirstName(String value) {
 
@@ -16,7 +16,7 @@ public record FirstName(String value) {
 
   private static void validate(String value) {
     if (isBlank(value) || value.length() > MAX_LENGTH) {
-      throw new InvalidFirstNameException();
+      throw new ValidationException("First name must not be blank and must be at most " + MAX_LENGTH + " characters");
     }
   }
 }

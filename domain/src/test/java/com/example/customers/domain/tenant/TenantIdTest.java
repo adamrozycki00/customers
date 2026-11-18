@@ -3,7 +3,7 @@ package com.example.customers.domain.tenant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.example.customers.domain.tenant.exception.InvalidTenantIdException;
+import com.example.customers.domain.exception.ValidationException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +51,8 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputNullTenantId));
 
-      assertThat(thrown).isInstanceOf(InvalidTenantIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
     }
 
     @Test
@@ -60,7 +61,8 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputEmptyTenantId));
 
-      assertThat(thrown).isInstanceOf(InvalidTenantIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
     }
 
     @Test
@@ -69,7 +71,8 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputTenantIdWithInvalidCharacters));
 
-      assertThat(thrown).isInstanceOf(InvalidTenantIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
     }
 
     @Test
@@ -78,7 +81,8 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputTooLongTenantId));
 
-      assertThat(thrown).isInstanceOf(InvalidTenantIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
     }
   }
 }

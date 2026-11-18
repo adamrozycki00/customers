@@ -2,7 +2,6 @@ package com.example.customers.application.service;
 
 import static java.util.Objects.nonNull;
 
-import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
@@ -15,7 +14,8 @@ import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
-import com.example.customers.domain.customer.exception.CustomerNotFoundException;
+import com.example.customers.domain.exception.NotFoundException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.Builder;
@@ -57,7 +57,7 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
     var tenantId = new TenantId(query.tenantId());
     var publicId = new PublicId(query.publicId());
 
-    return customerPort.find(tenantId, publicId).orElseThrow(CustomerNotFoundException::new);
+    return customerPort.find(tenantId, publicId).orElseThrow(() -> new NotFoundException("Customer not found"));
   }
 
   @Override
@@ -81,7 +81,7 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
 
   private void validatePageSize(int size) {
     if (size > pagingSettings.maxPageSize()) {
-      throw new InvalidPageRequestException();
+      throw new ValidationException("Size must be at most " + pagingSettings.maxPageSize());
     }
   }
 }

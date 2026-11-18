@@ -3,7 +3,7 @@ package com.example.customers.domain.customer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.example.customers.domain.customer.exception.InvalidCustomerException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
@@ -127,7 +127,8 @@ class CustomerTest {
           .publicId(inputMissingPublicId)
           .build());
 
-      assertThat(thrown).isInstanceOf(InvalidCustomerException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Customer requires a tenant id and a public id");
     }
 
     @Test
@@ -139,7 +140,8 @@ class CustomerTest {
           .publicId(validPublicId)
           .build());
 
-      assertThat(thrown).isInstanceOf(InvalidCustomerException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Customer requires a tenant id and a public id");
     }
   }
 }

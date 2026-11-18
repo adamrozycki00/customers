@@ -19,7 +19,7 @@ import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.PublicId;
-import com.example.customers.domain.customer.exception.DuplicatePublicIdException;
+import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.tenant.TenantId;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import java.time.Clock;
@@ -47,7 +47,7 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     try {
       mongoTemplate.insert(doc, COLLECTION);
     } catch (DuplicateKeyException e) {
-      throw new DuplicatePublicIdException();
+      throw new ConflictException("Customer with this public id already exists");
     }
 
     return customer;

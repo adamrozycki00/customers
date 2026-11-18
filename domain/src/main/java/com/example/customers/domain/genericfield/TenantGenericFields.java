@@ -3,8 +3,7 @@ package com.example.customers.domain.genericfield;
 import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
-import com.example.customers.domain.genericfield.exception.InvalidFieldNameException;
-import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValueException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import java.util.ArrayList;
@@ -19,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = PRIVATE)
 public final class TenantGenericFields {
+
+  private static final String NOT_REGISTERED = "Generic field is not registered";
 
   private final List<GenericField> fields;
 
@@ -38,7 +39,7 @@ public final class TenantGenericFields {
         var name = new FieldName(rawName);
         var typedValue = toTypedValue(name, rawValue);
         typedValues.put(name, typedValue);
-      } catch (InvalidFieldNameException | InvalidGenericFieldValueException e) {
+      } catch (ValidationException e) {
         invalidFieldNames.add(rawName);
       }
     }
@@ -58,7 +59,7 @@ public final class TenantGenericFields {
       try {
         var name = toRegisteredFieldName(rawName);
         registeredNames.add(name);
-      } catch (InvalidFieldNameException | InvalidGenericFieldValueException e) {
+      } catch (ValidationException e) {
         invalidFieldNames.add(rawName);
       }
     }
@@ -72,12 +73,12 @@ public final class TenantGenericFields {
 
   private FieldName toRegisteredFieldName(String rawName) {
     var name = new FieldName(rawName);
-    var field = findByName(name).orElseThrow(InvalidGenericFieldValueException::new);
+    var field = findByName(name).orElseThrow(() -> new ValidationException(NOT_REGISTERED));
     return field.getName();
   }
 
   private GenericFieldValue toTypedValue(FieldName name, Object rawValue) {
-    var field = findByName(name).orElseThrow(InvalidGenericFieldValueException::new);
+    var field = findByName(name).orElseThrow(() -> new ValidationException(NOT_REGISTERED));
     return field.getType().parse(rawValue);
   }
 

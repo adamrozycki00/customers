@@ -5,8 +5,7 @@ import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 
-import com.example.customers.domain.genericfield.exception.InvalidFieldTypeException;
-import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValueException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
@@ -23,6 +22,7 @@ public enum FieldType {
   INTEGER,
   DATETIME;
 
+  private static final String UNKNOWN_FIELD_TYPE = "Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME";
   private static final DateTimeFormatter ISO_DATETIME_DEFAULTING_TO_UTC = ISO_DATE_TIME.withZone(UTC);
 
   public static FieldType of(String rawType) {
@@ -45,7 +45,7 @@ public enum FieldType {
       return new BooleanValue(booleanValue);
     }
 
-    throw new InvalidGenericFieldValueException();
+    throw new ValidationException("Value must be a boolean");
   }
 
   private static StringValue parseString(Object rawValue) {
@@ -53,7 +53,7 @@ public enum FieldType {
       return new StringValue(stringValue);
     }
 
-    throw new InvalidGenericFieldValueException();
+    throw new ValidationException("Value must be a string");
   }
 
   private static IntegerValue parseInteger(Object rawValue) {
@@ -65,7 +65,7 @@ public enum FieldType {
       return new IntegerValue(longValue);
     }
 
-    throw new InvalidGenericFieldValueException();
+    throw new ValidationException("Value must be a whole number within 64 bits");
   }
 
   private static DatetimeValue parseDatetime(Object rawValue) {
@@ -74,7 +74,7 @@ public enum FieldType {
       return new DatetimeValue(instant);
     }
 
-    throw new InvalidGenericFieldValueException();
+    throw new ValidationException("Value must be an ISO-8601 datetime");
   }
 
   private static Instant toInstant(String datetimeText) {
@@ -82,13 +82,13 @@ public enum FieldType {
       var parsedDatetime = ISO_DATETIME_DEFAULTING_TO_UTC.parse(datetimeText);
       return Instant.from(parsedDatetime);
     } catch (DateTimeException e) {
-      throw new InvalidGenericFieldValueException();
+      throw new ValidationException("Value must be an ISO-8601 datetime");
     }
   }
 
   private static void validate(String rawType) {
     if (isNull(rawType)) {
-      throw new InvalidFieldTypeException();
+      throw new ValidationException(UNKNOWN_FIELD_TYPE);
     }
   }
 
@@ -99,6 +99,6 @@ public enum FieldType {
     return stream(allTypes)
         .filter(type -> type.name().equals(upperCaseType))
         .findFirst()
-        .orElseThrow(InvalidFieldTypeException::new);
+        .orElseThrow(() -> new ValidationException(UNKNOWN_FIELD_TYPE));
   }
 }

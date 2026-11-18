@@ -10,8 +10,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
 import com.example.customers.application.port.in.RegisterGenericFieldUseCase;
-import com.example.customers.domain.genericfield.exception.DuplicateFieldNameException;
-import com.example.customers.domain.genericfield.exception.InvalidFieldTypeException;
+import com.example.customers.domain.exception.ConflictException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import com.example.customers.infrastructure.rest.genericfield.GenericFieldController;
 import java.util.List;
@@ -31,8 +31,8 @@ class RestExceptionHandlerTest {
   private RegisterGenericFieldUseCase registerGenericFieldUseCase;
 
   @Test
-  void shouldReturnBadRequestForDomainValidationException() {
-    var invalidFieldType = new InvalidFieldTypeException();
+  void shouldReturnBadRequestForValidationException() {
+    var invalidFieldType = new ValidationException("Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME");
     given(registerGenericFieldUseCase.register(any())).willThrow(invalidFieldType);
     String inputRequest = """
         {"name": "vip", "type": "DATE"}
@@ -89,7 +89,7 @@ class RestExceptionHandlerTest {
 
   @Test
   void shouldReturnConflictForConflictException() {
-    var duplicateFieldName = new DuplicateFieldNameException();
+    var duplicateFieldName = new ConflictException("Generic field already registered");
     given(registerGenericFieldUseCase.register(any())).willThrow(duplicateFieldName);
     String inputRequest = """
         {"name": "vip", "type": "BOOLEAN"}

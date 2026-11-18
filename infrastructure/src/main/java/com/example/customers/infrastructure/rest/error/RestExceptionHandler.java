@@ -5,7 +5,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 import com.example.customers.domain.exception.ConflictException;
-import com.example.customers.domain.exception.DomainValidationException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ProblemDetail;
@@ -19,8 +19,8 @@ class RestExceptionHandler {
   private static final String ERRORS = "errors";
   private static final String UNEXPECTED_ERROR = "Unexpected error";
 
-  @ExceptionHandler(DomainValidationException.class)
-  ProblemDetail handleDomainValidation(DomainValidationException exception) {
+  @ExceptionHandler(ValidationException.class)
+  ProblemDetail handleValidation(ValidationException exception) {
     return ProblemDetail.forStatusAndDetail(BAD_REQUEST, exception.getMessage());
   }
 

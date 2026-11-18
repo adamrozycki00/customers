@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.example.customers.TestcontainersConfiguration;
+import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
-import com.example.customers.domain.genericfield.exception.DuplicateFieldNameException;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +78,8 @@ class MongoGenericFieldDbAdapterTest {
 
     var thrown = catchThrowable(() -> underTest.insert(inputFieldWithDuplicateName));
 
-    assertThat(thrown).isInstanceOf(DuplicateFieldNameException.class);
+    assertThat(thrown).isInstanceOf(ConflictException.class)
+        .hasMessage("Generic field already registered");
   }
 
   @Test

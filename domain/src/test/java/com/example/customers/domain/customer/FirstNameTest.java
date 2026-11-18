@@ -3,7 +3,7 @@ package com.example.customers.domain.customer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.example.customers.domain.customer.exception.InvalidFirstNameException;
+import com.example.customers.domain.exception.ValidationException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +59,8 @@ class FirstNameTest {
 
       var thrown = catchThrowable(() -> new FirstName(inputNullFirstName));
 
-      assertThat(thrown).isInstanceOf(InvalidFirstNameException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("First name must not be blank and must be at most 256 characters");
     }
 
     @Test
@@ -68,7 +69,8 @@ class FirstNameTest {
 
       var thrown = catchThrowable(() -> new FirstName(inputBlankFirstName));
 
-      assertThat(thrown).isInstanceOf(InvalidFirstNameException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("First name must not be blank and must be at most 256 characters");
     }
 
     @Test
@@ -77,7 +79,8 @@ class FirstNameTest {
 
       var thrown = catchThrowable(() -> new FirstName(inputTooLongFirstName));
 
-      assertThat(thrown).isInstanceOf(InvalidFirstNameException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("First name must not be blank and must be at most 256 characters");
     }
   }
 }

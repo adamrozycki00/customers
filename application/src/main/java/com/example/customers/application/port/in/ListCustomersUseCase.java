@@ -2,8 +2,8 @@ package com.example.customers.application.port.in;
 
 import static java.util.Objects.nonNull;
 
-import com.example.customers.application.exception.InvalidPageRequestException;
 import com.example.customers.application.port.CustomerPage;
+import com.example.customers.domain.exception.ValidationException;
 import lombok.Builder;
 
 public interface ListCustomersUseCase {
@@ -22,7 +22,7 @@ public interface ListCustomersUseCase {
 
     private static void validate(Integer page, Integer size) {
       if (isBelow(page, FIRST_PAGE) || isBelow(size, MIN_PAGE_SIZE)) {
-        throw new InvalidPageRequestException();
+        throw new ValidationException("Page and size must be at least 1");
       }
     }
 

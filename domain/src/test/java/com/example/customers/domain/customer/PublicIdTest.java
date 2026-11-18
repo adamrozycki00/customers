@@ -3,7 +3,7 @@ package com.example.customers.domain.customer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.example.customers.domain.customer.exception.InvalidPublicIdException;
+import com.example.customers.domain.exception.ValidationException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +51,8 @@ class PublicIdTest {
 
       var thrown = catchThrowable(() -> new PublicId(inputNullPublicId));
 
-      assertThat(thrown).isInstanceOf(InvalidPublicIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Public id must be 1 to 128 letters, digits, '_' or '-'");
     }
 
     @Test
@@ -60,7 +61,8 @@ class PublicIdTest {
 
       var thrown = catchThrowable(() -> new PublicId(inputEmptyPublicId));
 
-      assertThat(thrown).isInstanceOf(InvalidPublicIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Public id must be 1 to 128 letters, digits, '_' or '-'");
     }
 
     @Test
@@ -69,7 +71,8 @@ class PublicIdTest {
 
       var thrown = catchThrowable(() -> new PublicId(inputPublicIdWithInvalidCharacters));
 
-      assertThat(thrown).isInstanceOf(InvalidPublicIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Public id must be 1 to 128 letters, digits, '_' or '-'");
     }
 
     @Test
@@ -78,7 +81,8 @@ class PublicIdTest {
 
       var thrown = catchThrowable(() -> new PublicId(inputTooLongPublicId));
 
-      assertThat(thrown).isInstanceOf(InvalidPublicIdException.class);
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Public id must be 1 to 128 letters, digits, '_' or '-'");
     }
   }
 }

@@ -33,6 +33,34 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /customers:
+    post:
+      tags:
+        - Customers
+      operationId: createCustomer
+      summary: Create a customer for the tenant
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: The customer is created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   parameters:
     TenantId:
@@ -119,3 +147,55 @@ components:
         type:
           type: string
           example: BOOLEAN
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - public_id
+      properties:
+        public_id:
+          type: string
+          description: Unique per tenant and permanent; letters, digits, `_` or `-`; at most 128 characters.
+          example: CUST-1
+        first_name:
+          type: string
+          description: At most 256 characters; leading and trailing whitespace is removed; leave out for no name.
+          example: Anna
+        last_name:
+          type: string
+          description: At most 256 characters; leading and trailing whitespace is removed; leave out for no name.
+          example: Smith
+        generic_fields:
+          type: object
+          description: Values of the tenant's registered generic fields, keyed by field name.
+          additionalProperties: true
+          example:
+            vip: true
+            score: 42
+            since: '2024-03-01T10:00:00Z'
+
+    CustomerResponse:
+      type: object
+      required:
+        - public_id
+        - generic_fields
+      properties:
+        public_id:
+          type: string
+          example: CUST-1
+        first_name:
+          type: string
+          description: Left out when the customer has no first name.
+          example: Anna
+        last_name:
+          type: string
+          description: Left out when the customer has no last name.
+          example: Smith
+        generic_fields:
+          type: object
+          description: Generic field values; datetimes as ISO-8601 instants in UTC.
+          additionalProperties: true
+          example:
+            vip: true
+            score: 42
+            since: '2024-03-01T10:00:00Z'

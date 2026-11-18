@@ -4,7 +4,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.isNull;
 
-import com.example.customers.domain.customer.exception.InvalidCustomerException;
+import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
@@ -51,7 +51,7 @@ public final class Customer {
 
   private static void validate(TenantId tenantId, PublicId publicId) {
     if (isNull(tenantId) || isNull(publicId)) {
-      throw new InvalidCustomerException();
+      throw new ValidationException("Customer requires a tenant id and a public id");
     }
   }
 }
