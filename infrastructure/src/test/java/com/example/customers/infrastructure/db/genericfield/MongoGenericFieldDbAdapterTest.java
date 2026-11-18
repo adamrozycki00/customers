@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 @Import({TestcontainersConfiguration.class, MongoGenericFieldDbAdapter.class})
 class MongoGenericFieldDbAdapterTest {
 
-  private static final String GENERIC_FIELDS_COLLECTION = "generic_fields";
+  private static final String GENERIC_FIELDS_COLLECTION = "genericFields";
 
   @Autowired
   private MongoTemplate mongoTemplate;

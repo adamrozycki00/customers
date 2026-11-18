@@ -25,7 +25,7 @@ import static com.mongodb.client.model.Filters.lte;
 @RequiredArgsConstructor
 public class MongoGenericFieldDbAdapter implements GenericFieldPort {
 
-  private static final String COLLECTION = "generic_fields";
+  private static final String COLLECTION = "genericFields";
   private static final String ID = "_id";
   private static final String TENANT_ID = "tenantId";
   private static final String NAME = "name";
