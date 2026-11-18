@@ -3,8 +3,10 @@ package com.example.customers.infrastructure.rest.error;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import com.example.customers.domain.exception.ConflictException;
+import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.exception.InvalidGenericFieldValuesException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,11 @@ class RestExceptionHandler {
     var problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, exception.getMessage());
     problemDetail.setProperty(ERRORS, exception.getInvalidFieldNames());
     return problemDetail;
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  ProblemDetail handleNotFound(NotFoundException exception) {
+    return ProblemDetail.forStatusAndDetail(NOT_FOUND, exception.getMessage());
   }
 
   @ExceptionHandler(ConflictException.class)

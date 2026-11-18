@@ -3,6 +3,7 @@ package com.example.customers.infrastructure.rest.customer;
 import static java.util.Objects.nonNull;
 
 import com.example.customers.application.port.in.CreateCustomerUseCase;
+import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerController implements CustomersApi {
 
   private final CreateCustomerUseCase createCustomerUseCase;
+  private final GetCustomerUseCase getCustomerUseCase;
 
   @Override
   public CustomerResponse createCustomer(String xTenantId, CreateCustomerRequest request) {
@@ -35,6 +37,13 @@ public class CustomerController implements CustomersApi {
         .build();
     var createdCustomer = createCustomerUseCase.create(command);
     return toResponse(createdCustomer);
+  }
+
+  @Override
+  public CustomerResponse getCustomer(String xTenantId, String publicId) {
+    var query = new GetCustomerUseCase.Query(xTenantId, publicId);
+    var customer = getCustomerUseCase.get(query);
+    return toResponse(customer);
   }
 
   private static CustomerResponse toResponse(Customer customer) {

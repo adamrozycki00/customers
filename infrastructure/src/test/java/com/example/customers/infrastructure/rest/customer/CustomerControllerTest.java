@@ -6,15 +6,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
 import com.example.customers.application.port.in.CreateCustomerUseCase;
+import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
 import com.example.customers.domain.customer.PublicId;
 import com.example.customers.domain.exception.ConflictException;
+import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;
@@ -38,6 +42,9 @@ class CustomerControllerTest {
 
   @MockitoBean
   private CreateCustomerUseCase createCustomerUseCase;
+
+  @MockitoBean
+  private GetCustomerUseCase getCustomerUseCase;
 
   private final TenantId tenantId = new TenantId("flowers");
   private final PublicId publicId = new PublicId("CUST-1");
@@ -163,6 +170,64 @@ class CustomerControllerTest {
           .exchange();
 
       assertThat(resultResponse).hasStatus(CONFLICT)
+          .hasContentType(APPLICATION_PROBLEM_JSON)
+          .bodyJson().isLenientlyEqualTo(expectedResponse);
+    }
+  }
+
+  @Nested
+  class Get {
+
+    @Test
+    void shouldGetCustomer() {
+      // given that the use case finds Anna Smith with vip for the expected query
+      var expectedQuery = new GetCustomerUseCase.Query("flowers", "CUST-1");
+      var storedBoolean = new BooleanValue(true);
+      Map<FieldName, GenericFieldValue> storedGenericFields = Map.of(vipName, storedBoolean);
+      var storedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .lastName(lastName)
+          .genericFields(storedGenericFields)
+          .build();
+      given(getCustomerUseCase.get(expectedQuery)).willReturn(storedCustomer);
+      String expectedResponse = """
+          {
+            "public_id": "CUST-1",
+            "first_name": "Anna",
+            "last_name": "Smith",
+            "generic_fields": {"vip": true}
+          }
+          """;
+
+      var resultResponse = mockMvc.get()
+          .uri("/customers/CUST-1")
+          .header("X-Tenant-Id", "flowers")
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(OK)
+          .bodyJson().isStrictlyEqualTo(expectedResponse);
+    }
+
+    @Test
+    void shouldReturnNotFoundForUnknownCustomer() {
+      var customerNotFound = new NotFoundException("Customer not found");
+      given(getCustomerUseCase.get(any())).willThrow(customerNotFound);
+      String expectedResponse = """
+          {
+            "status": 404,
+            "title": "Not Found",
+            "detail": "Customer not found"
+          }
+          """;
+
+      var resultResponse = mockMvc.get()
+          .uri("/customers/CUST-404")
+          .header("X-Tenant-Id", "flowers")
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(NOT_FOUND)
           .hasContentType(APPLICATION_PROBLEM_JSON)
           .bodyJson().isLenientlyEqualTo(expectedResponse);
     }
