@@ -33,10 +33,10 @@ class GenericFieldIT {
 
   @Test
   void shouldRegisterGenericField() {
-    String inputBody = """
+    String inputRequest = """
         {"name": "vip", "type": "BOOLEAN"}
         """;
-    String expectedBody = """
+    String expectedResponse = """
         {"name": "vip", "type": "BOOLEAN"}
         """;
 
@@ -44,10 +44,10 @@ class GenericFieldIT {
         .uri("/generic-fields")
         .header("X-Tenant-Id", "flowers")
         .contentType(APPLICATION_JSON)
-        .body(inputBody)
+        .body(inputRequest)
         .exchange();
 
     resultResponse.expectStatus().isCreated()
-        .expectBody().json(expectedBody);
+        .expectBody().json(expectedResponse);
   }
 }
