@@ -143,10 +143,10 @@ class MongoGenericFieldDbAdapterTest {
   private List<String> getFindPlanSummaries() {
     var database = mongoTemplate.getDb();
     var namespace = database.getName() + "." + GENERIC_FIELDS_COLLECTION;
-    var findOperations = new Document("ns", namespace)
+    var findOperationsFilter = new Document("ns", namespace)
         .append("op", "query");
     return database.getCollection("system.profile")
-        .find(findOperations)
+        .find(findOperationsFilter)
         .map(entry -> entry.getString("planSummary"))
         .into(new ArrayList<>());
   }

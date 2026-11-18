@@ -18,10 +18,14 @@ import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.MaxKey;
+import org.bson.types.MinKey;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,6 +33,9 @@ import java.util.Optional;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.gte;
+import static com.mongodb.client.model.Filters.lte;
+import static com.mongodb.client.model.Sorts.ascending;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 
@@ -44,6 +51,7 @@ public class MongoCustomerDbAdapter implements CustomerPort {
   private static final String LAST_NAME = "lastName";
   private static final String GENERIC_FIELDS = "genericFields";
   private static final String DELETED_AT = "deletedAt";
+  private static final Bson NOT_DELETED_FILTER = eq(DELETED_AT, null);
 
   private final MongoTemplate mongoTemplate;
 
@@ -64,8 +72,7 @@ public class MongoCustomerDbAdapter implements CustomerPort {
   public Optional<Customer> find(TenantId tenantId, PublicId publicId) {
     var id = toId(tenantId, publicId);
     var idFilter = eq(ID, id);
-    var notDeletedFilter = eq(DELETED_AT, null);
-    var activeCustomerFilter = and(idFilter, notDeletedFilter);
+    var activeCustomerFilter = and(idFilter, NOT_DELETED_FILTER);
     var doc = mongoTemplate.getCollection(COLLECTION)
         .find(activeCustomerFilter)
         .first();
@@ -75,7 +82,30 @@ public class MongoCustomerDbAdapter implements CustomerPort {
 
   @Override
   public CustomerPage getPage(TenantId tenantId, PageRequest pageRequest) {
-    return null;
+    var page = pageRequest.page();
+    var size = pageRequest.size();
+    var customersOfEarlierPages = (page - 1) * size;
+    var tenantIdRangeFilter = toTenantIdRangeFilter(tenantId);
+    var activeCustomersOfTenantFilter = and(tenantIdRangeFilter, NOT_DELETED_FILTER);
+    var byPublicId = ascending(ID);
+    var collection = mongoTemplate.getCollection(COLLECTION);
+    var customers = new ArrayList<Customer>();
+
+    collection.find(activeCustomersOfTenantFilter)
+        .sort(byPublicId)
+        .skip(customersOfEarlierPages)
+        .limit(size)
+        .map(MongoCustomerDbAdapter::toDomain)
+        .into(customers);
+
+    var totalElements = collection.countDocuments(activeCustomersOfTenantFilter);
+
+    return CustomerPage.builder()
+        .customers(customers)
+        .page(page)
+        .size(size)
+        .totalElements(totalElements)
+        .build();
   }
 
   @Override
@@ -85,6 +115,19 @@ public class MongoCustomerDbAdapter implements CustomerPort {
 
   @Override
   public void delete(TenantId tenantId, PublicId publicId) {
+  }
+
+  private static Bson toTenantIdRangeFilter(TenantId tenantId) {
+    var rawTenantId = tenantId.value();
+    var lowestPublicId = new MinKey();
+    var highestPublicId = new MaxKey();
+    var firstIdOfTenant = new Document(TENANT_ID, rawTenantId)
+        .append(PUBLIC_ID, lowestPublicId);
+    var lastIdOfTenant = new Document(TENANT_ID, rawTenantId)
+        .append(PUBLIC_ID, highestPublicId);
+    var fromFirstIdOfTenantFilter = gte(ID, firstIdOfTenant);
+    var toLastIdOfTenantFilter = lte(ID, lastIdOfTenant);
+    return and(fromFirstIdOfTenantFilter, toLastIdOfTenantFilter);
   }
 
   private static Document toId(TenantId tenantId, PublicId publicId) {

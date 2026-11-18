@@ -1,6 +1,8 @@
 package com.example.customers.infrastructure.db.customer;
 
 import com.example.customers.TestcontainersConfiguration;
+import com.example.customers.application.port.CustomerPage;
+import com.example.customers.application.port.PageRequest;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
@@ -14,6 +16,7 @@ import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.domain.tenant.TenantId;
 import org.bson.Document;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,7 +26,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,6 +58,12 @@ class MongoCustomerDbAdapterTest {
   @BeforeEach
   void clearCollection() {
     mongoTemplate.dropCollection(CUSTOMERS_COLLECTION);
+  }
+
+  @AfterEach
+  void disableProfiler() {
+    var profileNothing = new Document("profile", 0);
+    mongoTemplate.getDb().runCommand(profileNothing);
   }
 
   @Nested
@@ -130,10 +141,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldRejectDuplicatePublicId() {
-      var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
-      var storedDoc = new Document("_id", storedId);
-      mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+      storeCustomerDoc("flowers", "CUST-1");
       var inputCustomerWithDuplicatePublicId = Customer.builder()
           .tenantId(tenantId)
           .publicId(publicId)
@@ -147,13 +155,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldRejectInsertingDeletedCustomer() {
-      var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
-      var deletedAt = Instant.parse("2026-01-15T09:30:00Z");
-      var storedDeletedAt = Date.from(deletedAt);
-      var storedDeletedDoc = new Document("_id", storedId)
-          .append("deletedAt", storedDeletedAt);
-      mongoTemplate.insert(storedDeletedDoc, CUSTOMERS_COLLECTION);
+      storeDeletedCustomerDoc("flowers", "CUST-1");
       var inputCustomerReusingPublicId = Customer.builder()
           .tenantId(tenantId)
           .publicId(publicId)
@@ -237,14 +239,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldNotFindDeletedCustomer() {
-      var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
-      var instant = Instant.parse("2026-01-15T09:30:00Z");
-      var storedDate = Date.from(instant);
-      var storedDeletedDoc = new Document("_id", storedId)
-          .append("firstName", "Anna")
-          .append("deletedAt", storedDate);
-      mongoTemplate.insert(storedDeletedDoc, CUSTOMERS_COLLECTION);
+      storeDeletedCustomerDoc("flowers", "CUST-1");
 
       var resultCustomer = underTest.find(tenantId, publicId);
 
@@ -263,5 +258,160 @@ class MongoCustomerDbAdapterTest {
 
       assertThat(resultCustomer).isEmpty();
     }
+  }
+
+  @Nested
+  class GetPage {
+
+    @Test
+    void shouldGetPageOrderedByPublicId() {
+      storeCustomerDoc("flowers", "CUST-3");
+      storeCustomerDoc("flowers", "CUST-1");
+      storeCustomerDoc("flowers", "CUST-2");
+      var inputPageRequest = new PageRequest(1, 10);
+      var expectedPublicIds = List.of("CUST-1", "CUST-2", "CUST-3");
+
+      var resultPage = underTest.getPage(tenantId, inputPageRequest);
+
+      assertThat(resultPage.customers())
+          .extracting(Customer::getPublicId)
+          .extracting(PublicId::value)
+          .containsExactlyElementsOf(expectedPublicIds);
+    }
+
+    @Test
+    void shouldGetRequestedPage() {
+      storeCustomerDoc("flowers", "CUST-1");
+      storeCustomerDoc("flowers", "CUST-2");
+      storeCustomerDoc("flowers", "CUST-3");
+      storeCustomerDoc("flowers", "CUST-4");
+      storeCustomerDoc("flowers", "CUST-5");
+      var inputSecondPageOfTwo = new PageRequest(2, 2);
+      var thirdPublicId = new PublicId("CUST-3");
+      var fourthPublicId = new PublicId("CUST-4");
+      var expectedThirdCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(thirdPublicId)
+          .build();
+      var expectedFourthCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(fourthPublicId)
+          .build();
+      var expectedCustomers = List.of(expectedThirdCustomer, expectedFourthCustomer);
+      var expectedPage = CustomerPage.builder()
+          .customers(expectedCustomers)
+          .page(2)
+          .size(2)
+          .totalElements(5)
+          .build();
+
+      var resultPage = underTest.getPage(tenantId, inputSecondPageOfTwo);
+
+      assertThat(resultPage).usingRecursiveComparison().isEqualTo(expectedPage);
+    }
+
+    @Test
+    void shouldLeaveOutDeletedCustomers() {
+      storeCustomerDoc("flowers", "CUST-1");
+      storeDeletedCustomerDoc("flowers", "CUST-2");
+      storeCustomerDoc("flowers", "CUST-3");
+      var inputPageRequest = new PageRequest(1, 10);
+      var firstPublicId = new PublicId("CUST-1");
+      var thirdPublicId = new PublicId("CUST-3");
+      var expectedFirstCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(firstPublicId)
+          .build();
+      var expectedThirdCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(thirdPublicId)
+          .build();
+      var expectedCustomers = List.of(expectedFirstCustomer, expectedThirdCustomer);
+      var expectedPage = CustomerPage.builder()
+          .customers(expectedCustomers)
+          .page(1)
+          .size(10)
+          .totalElements(2)
+          .build();
+
+      var resultPage = underTest.getPage(tenantId, inputPageRequest);
+
+      assertThat(resultPage).usingRecursiveComparison().isEqualTo(expectedPage);
+    }
+
+    @Test
+    void shouldGetOnlyCustomersOfGivenTenant() {
+      storeCustomerDoc("flowers", "CUST-1");
+      storeCustomerDoc("trees", "CUST-2");
+      storeCustomerDoc("flowers", "CUST-3");
+      var inputPageRequest = new PageRequest(1, 10);
+      var firstPublicId = new PublicId("CUST-1");
+      var thirdPublicId = new PublicId("CUST-3");
+      var expectedFirstCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(firstPublicId)
+          .build();
+      var expectedThirdCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(thirdPublicId)
+          .build();
+      var expectedCustomers = List.of(expectedFirstCustomer, expectedThirdCustomer);
+      var expectedPage = CustomerPage.builder()
+          .customers(expectedCustomers)
+          .page(1)
+          .size(10)
+          .totalElements(2)
+          .build();
+
+      var resultPage = underTest.getPage(tenantId, inputPageRequest);
+
+      assertThat(resultPage).usingRecursiveComparison().isEqualTo(expectedPage);
+    }
+
+    @Test
+    void shouldGetPageUsingIndex() {
+      storeCustomerDoc("flowers", "CUST-1");
+      storeCustomerDoc("trees", "CUST-2");
+      var inputPageRequest = new PageRequest(1, 10);
+      enableProfiler();
+      String expectedPlanSummary = "IXSCAN { _id: 1 }";
+
+      underTest.getPage(tenantId, inputPageRequest);
+
+      var planSummaries = getPlanSummaries();
+      assertThat(planSummaries).hasSize(2).containsOnly(expectedPlanSummary);
+    }
+  }
+
+  private void enableProfiler() {
+    var profileAllOperations = new Document("profile", 2);
+    mongoTemplate.getDb().runCommand(profileAllOperations);
+  }
+
+  private List<String> getPlanSummaries() {
+    var database = mongoTemplate.getDb();
+    var namespace = database.getName() + "." + CUSTOMERS_COLLECTION;
+    var customersOperationsFilter = new Document("ns", namespace);
+    return database.getCollection("system.profile")
+        .find(customersOperationsFilter)
+        .map(entry -> entry.getString("planSummary"))
+        .into(new ArrayList<>());
+  }
+
+  private void storeCustomerDoc(String tenantId, String publicId) {
+    var storedId = new Document("tenantId", tenantId)
+        .append("publicId", publicId);
+    var storedDoc = new Document("_id", storedId);
+    mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
+  }
+
+  private void storeDeletedCustomerDoc(String tenantId, String publicId) {
+    var storedId = new Document("tenantId", tenantId)
+        .append("publicId", publicId);
+    var instant = Instant.parse("2026-01-15T09:30:00Z");
+    var storedDate = Date.from(instant);
+    var storedDeletedDoc = new Document("_id", storedId)
+        .append("deletedAt", storedDate);
+    mongoTemplate.insert(storedDeletedDoc, CUSTOMERS_COLLECTION);
   }
 }

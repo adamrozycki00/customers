@@ -55,13 +55,13 @@ public class MongoGenericFieldDbAdapter implements GenericFieldPort {
         .append(NAME, lowestName);
     var lastIdOfTenant = new Document(TENANT_ID, rawTenantId)
         .append(NAME, highestName);
-    var fromFirstIdOfTenant = gte(ID, firstIdOfTenant);
-    var toLastIdOfTenant = lte(ID, lastIdOfTenant);
-    var tenantIdRange = and(fromFirstIdOfTenant, toLastIdOfTenant);
+    var fromFirstIdOfTenantFilter = gte(ID, firstIdOfTenant);
+    var toLastIdOfTenantFilter = lte(ID, lastIdOfTenant);
+    var tenantIdRangeFilter = and(fromFirstIdOfTenantFilter, toLastIdOfTenantFilter);
     var fields = new ArrayList<GenericField>();
 
     mongoTemplate.getCollection(COLLECTION)
-        .find(tenantIdRange)
+        .find(tenantIdRangeFilter)
         .map(MongoGenericFieldDbAdapter::toDomain)
         .into(fields);
 
