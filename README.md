@@ -66,7 +66,7 @@ Errors are returned as RFC 9457 Problem Details (`application/problem+json`).
 11. PATCH uses a field mask built from the keys present in the request (`firstName`, `lastName`, `genericFields.*`). A present value is set, `null` clears it, and an absent key is left unchanged. The public id cannot be changed.
 12. A generic field value whose name is not registered for the tenant, or whose type does not match, is rejected with 400. Nothing is dropped silently.
 13. The regular delete semantics for customers is soft deletion (a `deletedAt` timestamp, set on the first deletion only), for better traceability. GDPR-related hard deletion should be handled independently of the regular delete use case. POST requests with a soft-deleted public id get 409. GET and PATCH on a soft-deleted customer get 404, and soft-deleted customers are excluded from listings. DELETE is idempotent and always returns 204, including for a customer that never existed.
-14. Listing uses offset pagination with 1-based page numbers (`page` default 1, `size` default 20, max 100), ordered by public id.
+14. Listing uses offset pagination with 1-based page numbers (`page` default 1, `size` default 20, max 100), ordered by public id. The default and maximum page sizes are configurable in `application.yaml` (`customers.paging.default-page-size`, `customers.paging.max-page-size`).
 
 ### Concurrency
 
