@@ -1,6 +1,7 @@
 package com.example.customers.infrastructure.rest.customer;
 
 import com.example.customers.application.port.in.CreateCustomerUseCase;
+import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.application.port.in.UpdateCustomerUseCase;
@@ -20,6 +21,7 @@ public class CustomerController implements CustomerApi {
   private final GetCustomerUseCase getCustomerUseCase;
   private final ListCustomersUseCase listCustomersUseCase;
   private final UpdateCustomerUseCase updateCustomerUseCase;
+  private final DeleteCustomerUseCase deleteCustomerUseCase;
   private final CustomerRestMapper mapper;
 
   @Override
@@ -52,5 +54,11 @@ public class CustomerController implements CustomerApi {
     var command = mapper.toUpdateCommand(xTenantId, publicId, request);
     var updatedCustomer = updateCustomerUseCase.update(command);
     return mapper.toResponse(updatedCustomer);
+  }
+
+  @Override
+  public void deleteCustomer(String xTenantId, String publicId) {
+    var command = new DeleteCustomerUseCase.Command(xTenantId, publicId);
+    deleteCustomerUseCase.delete(command);
   }
 }

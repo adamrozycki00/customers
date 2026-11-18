@@ -6,7 +6,9 @@ import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -14,6 +16,7 @@ import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
+import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.application.port.in.UpdateCustomerUseCase;
@@ -59,6 +62,9 @@ class CustomerControllerTest {
 
   @MockitoBean
   private UpdateCustomerUseCase updateCustomerUseCase;
+
+  @MockitoBean
+  private DeleteCustomerUseCase deleteCustomerUseCase;
 
   private final TenantId tenantId = new TenantId("flowers");
   private final PublicId publicId = new PublicId("CUST-1");
@@ -430,6 +436,23 @@ class CustomerControllerTest {
 
       assertThat(resultResponse).hasStatus(OK)
           .bodyJson().isStrictlyEqualTo(expectedResponse);
+    }
+  }
+
+  @Nested
+  class Delete {
+
+    @Test
+    void shouldDeleteCustomer() {
+      var expectedCommand = new DeleteCustomerUseCase.Command("flowers", "CUST-1");
+
+      var resultResponse = mockMvc.delete()
+          .uri("/customers/CUST-1")
+          .header("X-Tenant-Id", "flowers")
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(NO_CONTENT);
+      then(deleteCustomerUseCase).should().delete(expectedCommand);
     }
   }
 }

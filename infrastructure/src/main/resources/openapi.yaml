@@ -148,6 +148,23 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+    delete:
+      tags:
+        - Customer
+      operationId: deleteCustomer
+      summary: Delete a customer of the tenant
+      description: Idempotent; deleting a customer that does not exist or is already deleted also returns 204.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PublicId'
+      responses:
+        '204':
+          description: The customer is deleted (or did not exist).
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   parameters:
     TenantId:
