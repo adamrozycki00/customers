@@ -18,6 +18,23 @@ Prerequisites: JDK 25 and a running Docker daemon. Maven is provided through the
 ./mvnw -pl infrastructure spring-boot:run
 ```
 
+### Try it
+
+The application listens on `http://localhost:8080`. Stopping it (Ctrl+C) also stops the MongoDB container it started; the container is kept, so its data survives a restart.
+
+```shell
+# Register a generic field for tenant "flowers"
+curl -X POST localhost:8080/generic-fields -H 'X-Tenant-Id: flowers' -H 'Content-Type: application/json' \
+  -d '{"name": "vip", "type": "BOOLEAN"}'
+
+# Create a customer with a value for it
+curl -X POST localhost:8080/customers -H 'X-Tenant-Id: flowers' -H 'Content-Type: application/json' \
+  -d '{"public_id": "CUST-1", "first_name": "Anna", "generic_fields": {"vip": true}}'
+
+# Read it back
+curl localhost:8080/customers/CUST-1 -H 'X-Tenant-Id: flowers'
+```
+
 ## API
 
 The API is specified contract-first in OpenAPI: [`infrastructure/src/main/resources/openapi.yaml`](infrastructure/src/main/resources/openapi.yaml). The controller interfaces and request/response classes are generated from it at build time. JSON properties use `snake_case`.

@@ -85,7 +85,6 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
     return switch (fieldUpdate) {
       case FieldUpdate.Keep<T> _ -> currentValue;
       case FieldUpdate.Replace<T> replace -> replace.value();
-      case FieldUpdate.Clear<T> _ -> null;
     };
   }
 

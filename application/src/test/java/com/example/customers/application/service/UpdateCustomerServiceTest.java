@@ -64,26 +64,6 @@ class UpdateCustomerServiceTest {
   }
 
   @Test
-  void shouldClearFirstName() {
-    storeCustomer();
-    Set<String> firstNameMask = Set.of("firstName");
-    var inputCommandClearingFirstName = UpdateCustomerUseCase.Command.builder()
-        .tenantId("flowers")
-        .publicId("CUST-1")
-        .fieldMask(firstNameMask)
-        .build();
-    var expectedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .publicId(publicId)
-        .lastName(storedLastName)
-        .build();
-
-    var resultCustomer = underTest.update(inputCommandClearingFirstName);
-
-    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
-  }
-
-  @Test
   void shouldSetLastName() {
     // given that Anna Smith is stored and a command sets the last name to Nowak
     storeCustomer();
@@ -103,26 +83,6 @@ class UpdateCustomerServiceTest {
         .build();
 
     var resultCustomer = underTest.update(inputCommand);
-
-    assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
-  }
-
-  @Test
-  void shouldClearLastName() {
-    storeCustomer();
-    Set<String> lastNameMask = Set.of("lastName");
-    var inputCommandClearingLastName = UpdateCustomerUseCase.Command.builder()
-        .tenantId("flowers")
-        .publicId("CUST-1")
-        .fieldMask(lastNameMask)
-        .build();
-    var expectedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .publicId(publicId)
-        .firstName(storedFirstName)
-        .build();
-
-    var resultCustomer = underTest.update(inputCommandClearingLastName);
 
     assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
   }

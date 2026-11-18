@@ -133,12 +133,8 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
   }
 
   private static <T> FieldUpdate<T> toFieldUpdate(String rawValue, Function<String, T> toField) {
-    if (nonNull(rawValue)) {
-      var field = toField.apply(rawValue);
-      return new FieldUpdate.Replace<>(field);
-    }
-
-    return new FieldUpdate.Clear<>();
+    var field = toField.apply(rawValue);
+    return new FieldUpdate.Replace<>(field);
   }
 
   private record GenericFieldsToUpdate(Map<FieldName, GenericFieldValue> toSet, Set<FieldName> toClear) {

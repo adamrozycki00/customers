@@ -81,10 +81,6 @@ final class CustomerDbHelper {
         var setName = set(fieldName, rawName);
         updates.add(setName);
       }
-      case FieldUpdate.Clear<T> _ -> {
-        var unsetName = unset(fieldName);
-        updates.add(unsetName);
-      }
       case FieldUpdate.Keep<T> _ -> {
       }
     }

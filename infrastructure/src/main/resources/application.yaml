@@ -7,6 +7,9 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: true
+    mapper:
+      sort-creator-properties-first: false
+      sort-properties-alphabetically: false
 
 customers:
   paging:

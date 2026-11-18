@@ -438,36 +438,6 @@ class MongoCustomerDbAdapterTest {
     }
 
     @Test
-    void shouldClearNames() {
-      // given that Anna Smith is stored and an update clearing both names
-      storeCustomerDocWithNames();
-      var clearFirstName = new FieldUpdate.Clear<FirstName>();
-      var clearLastName = new FieldUpdate.Clear<LastName>();
-      Map<FieldName, GenericFieldValue> noGenericFieldsToSet = emptyMap();
-      Set<FieldName> noGenericFieldsToClear = emptySet();
-      var inputUpdate = CustomerUpdate.builder()
-          .firstName(clearFirstName)
-          .lastName(clearLastName)
-          .genericFieldsToSet(noGenericFieldsToSet)
-          .genericFieldsToClear(noGenericFieldsToClear)
-          .build();
-      var expectedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
-      var expectedDoc = new Document("_id", expectedId);
-      var expectedJson = expectedDoc.toJson();
-      var expectedCustomer = Customer.builder()
-          .tenantId(tenantId)
-          .publicId(publicId)
-          .build();
-
-      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
-
-      var storedDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
-      assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
-      assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
-    }
-
-    @Test
     void shouldLeaveKeptNameUnchanged() {
       // given that Anna Smith is stored and an update replacing only the first name
       storeCustomerDocWithNames();

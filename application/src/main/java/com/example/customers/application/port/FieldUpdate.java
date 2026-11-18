@@ -7,7 +7,4 @@ public sealed interface FieldUpdate<T> {
 
   record Replace<T>(T value) implements FieldUpdate<T> {
   }
-
-  record Clear<T>() implements FieldUpdate<T> {
-  }
 }
