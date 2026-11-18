@@ -3,6 +3,7 @@ package com.example.customers.infrastructure.rest.customer;
 import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.FIRST_NAME_PATH;
 import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.GENERIC_FIELDS_PATH_PREFIX;
 import static com.example.customers.application.port.in.UpdateCustomerUseCase.Command.LAST_NAME_PATH;
+import static java.util.Objects.nonNull;
 
 import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
@@ -49,14 +50,23 @@ public interface CustomerRestMapper {
   @Named("toFieldMask")
   default Set<String> toFieldMask(CustomerPatchRequest request) {
     Set<String> fieldMask = new LinkedHashSet<>();
-    fieldMask.add(FIRST_NAME_PATH);
-    fieldMask.add(LAST_NAME_PATH);
+
+    if (nonNull(request.getFirstName())) {
+      fieldMask.add(FIRST_NAME_PATH);
+    }
+
+    if (nonNull(request.getLastName())) {
+      fieldMask.add(LAST_NAME_PATH);
+    }
+
     var genericFields = request.getGenericFields();
 
-    genericFields.keySet().forEach(name -> {
-      var path = GENERIC_FIELDS_PATH_PREFIX + name;
-      fieldMask.add(path);
-    });
+    if (nonNull(genericFields)) {
+      genericFields.keySet().forEach(name -> {
+        var path = GENERIC_FIELDS_PATH_PREFIX + name;
+        fieldMask.add(path);
+      });
+    }
 
     return fieldMask;
   }

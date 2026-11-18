@@ -2,6 +2,7 @@ package com.example.customers.infrastructure.rest.customer;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -348,6 +349,83 @@ class CustomerControllerTest {
           .header("X-Tenant-Id", "flowers")
           .contentType(APPLICATION_JSON)
           .content(inputRequest)
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(OK)
+          .bodyJson().isStrictlyEqualTo(expectedResponse);
+    }
+
+    @Test
+    void shouldKeepNamesSentAsNull() {
+      // given that the use case sets vip only, for a command whose mask leaves both names out
+      Set<String> expectedFieldMask = Set.of("genericFields.vip");
+      Map<String, Object> expectedRawGenericFields = Map.of("vip", true);
+      var expectedCommand = UpdateCustomerUseCase.Command.builder()
+          .tenantId("flowers")
+          .publicId("CUST-1")
+          .fieldMask(expectedFieldMask)
+          .genericFields(expectedRawGenericFields)
+          .build();
+      var updatedBoolean = new BooleanValue(true);
+      Map<FieldName, GenericFieldValue> updatedGenericFields = Map.of(vipName, updatedBoolean);
+      var updatedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .lastName(lastName)
+          .genericFields(updatedGenericFields)
+          .build();
+      given(updateCustomerUseCase.update(expectedCommand)).willReturn(updatedCustomer);
+      String inputRequestWithNullNames = """
+          {"first_name": null, "last_name": null, "generic_fields": {"vip": true}}
+          """;
+      String expectedResponse = """
+          {
+            "public_id": "CUST-1",
+            "first_name": "Anna",
+            "last_name": "Smith",
+            "generic_fields": {"vip": true}
+          }
+          """;
+
+      var resultResponse = mockMvc.patch()
+          .uri("/customers/CUST-1")
+          .header("X-Tenant-Id", "flowers")
+          .contentType(APPLICATION_JSON)
+          .content(inputRequestWithNullNames)
+          .exchange();
+
+      assertThat(resultResponse).hasStatus(OK)
+          .bodyJson().isStrictlyEqualTo(expectedResponse);
+    }
+
+    @Test
+    void shouldKeepGenericFieldsSentAsNull() {
+      // given that the use case returns the unchanged customer for a command with an empty mask
+      Set<String> expectedEmptyFieldMask = emptySet();
+      var expectedCommand = UpdateCustomerUseCase.Command.builder()
+          .tenantId("flowers")
+          .publicId("CUST-1")
+          .fieldMask(expectedEmptyFieldMask)
+          .build();
+      var unchangedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .publicId(publicId)
+          .firstName(firstName)
+          .build();
+      given(updateCustomerUseCase.update(expectedCommand)).willReturn(unchangedCustomer);
+      String inputRequestWithNullGenericFields = """
+          {"generic_fields": null}
+          """;
+      String expectedResponse = """
+          {"public_id": "CUST-1", "first_name": "Anna", "generic_fields": {}}
+          """;
+
+      var resultResponse = mockMvc.patch()
+          .uri("/customers/CUST-1")
+          .header("X-Tenant-Id", "flowers")
+          .contentType(APPLICATION_JSON)
+          .content(inputRequestWithNullGenericFields)
           .exchange();
 
       assertThat(resultResponse).hasStatus(OK)
