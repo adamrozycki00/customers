@@ -9,9 +9,9 @@ import com.example.customers.application.adapter.InMemoryCustomerDbAdapter;
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
 import com.example.customers.application.port.in.UpdateCustomerUseCase;
 import com.example.customers.domain.customer.Customer;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
@@ -220,6 +220,36 @@ class UpdateCustomerServiceTest {
     var resultCustomer = underTest.update(inputCommand);
 
     assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+  }
+
+  @Test
+  void shouldAskForGenericFieldsToUpdate() {
+    // given registered vip and score fields and a command setting first name and vip, clearing score
+    registerVipField();
+    var scoreName = new FieldName("score");
+    var scoreField = GenericField.builder()
+        .tenantId(tenantId)
+        .name(scoreName)
+        .type(FieldType.INTEGER)
+        .build();
+    genericFieldRepo.insert(scoreField);
+    storeCustomer();
+    Set<String> inputFieldMask = Set.of("firstName", "genericFields.vip", "genericFields.score");
+    Map<String, Object> inputGenericFields = new HashMap<>();
+    inputGenericFields.put("vip", true);
+    inputGenericFields.put("score", null);
+    var inputCommand = UpdateCustomerUseCase.Command.builder()
+        .tenantId("flowers")
+        .id("CUST-1")
+        .fieldMask(inputFieldMask)
+        .firstName("Maria")
+        .genericFields(inputGenericFields)
+        .build();
+    Set<String> expectedNames = Set.of("vip", "score");
+
+    underTest.update(inputCommand);
+
+    assertThat(genericFieldRepo.getLastExpectedNames()).isEqualTo(expectedNames);
   }
 
   @Test

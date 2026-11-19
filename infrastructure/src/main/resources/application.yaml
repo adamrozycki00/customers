@@ -15,3 +15,6 @@ customers:
   paging:
     default-page-size: 20
     max-page-size: 100
+  generic-fields:
+    cache:
+      refresh-interval-minutes: 30

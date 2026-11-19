@@ -1,6 +1,5 @@
 package com.example.customers.infrastructure.db.genericfield;
 
-import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -12,7 +11,6 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +36,6 @@ class MongoGenericFieldRepositoryTest {
 
   private final TenantId tenantId = new TenantId("FLOWERS");
   private final FieldName vipName = new FieldName("vip");
-  private final Set<String> noExpectedNames = emptySet();
 
   @BeforeEach
   void clearCollection() {
@@ -94,7 +91,7 @@ class MongoGenericFieldRepositoryTest {
         .type(FieldType.BOOLEAN)
         .build();
 
-    var resultFields = underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
+    var resultFields = underTest.findAllByTenant(tenantId);
 
     assertThat(resultFields).singleElement().usingRecursiveComparison().isEqualTo(expectedField);
   }
@@ -105,7 +102,7 @@ class MongoGenericFieldRepositoryTest {
     var storedType = fieldType.name();
     storeFieldDocument("FLOWERS", "vip", storedType);
 
-    var resultFields = underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
+    var resultFields = underTest.findAllByTenant(tenantId);
 
     assertThat(resultFields).singleElement().extracting(GenericField::getType).isEqualTo(fieldType);
   }
@@ -120,7 +117,7 @@ class MongoGenericFieldRepositoryTest {
         .type(FieldType.BOOLEAN)
         .build();
 
-    var resultFields = underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
+    var resultFields = underTest.findAllByTenant(tenantId);
 
     assertThat(resultFields).singleElement().usingRecursiveComparison().isEqualTo(expectedField);
   }
@@ -132,10 +129,34 @@ class MongoGenericFieldRepositoryTest {
     enableProfiler();
     String expectedPlanSummary = "IXSCAN { _id: 1 }";
 
-    underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
+    underTest.findAllByTenant(tenantId);
 
     var planSummaries = getFindPlanSummaries();
     assertThat(planSummaries).singleElement().isEqualTo(expectedPlanSummary);
+  }
+
+  @Test
+  void shouldFindAllFields() {
+    // given fields of two tenants
+    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("TREES", "score", "INTEGER");
+    var treesTenantId = new TenantId("TREES");
+    var scoreName = new FieldName("score");
+    var expectedFlowersField = GenericField.builder()
+        .tenantId(tenantId)
+        .name(vipName)
+        .type(FieldType.BOOLEAN)
+        .build();
+    var expectedTreesField = GenericField.builder()
+        .tenantId(treesTenantId)
+        .name(scoreName)
+        .type(FieldType.INTEGER)
+        .build();
+
+    var resultFields = underTest.findAll();
+
+    assertThat(resultFields).usingRecursiveFieldByFieldElementComparator()
+        .containsExactlyInAnyOrder(expectedFlowersField, expectedTreesField);
   }
 
   private void enableProfiler() {

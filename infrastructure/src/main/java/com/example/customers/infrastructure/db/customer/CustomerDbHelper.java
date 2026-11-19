@@ -22,9 +22,9 @@ import static org.apache.commons.collections4.MapUtils.isEmpty;
 
 import com.example.customers.application.port.CustomerUpdate;
 import com.example.customers.application.port.FieldUpdate;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;

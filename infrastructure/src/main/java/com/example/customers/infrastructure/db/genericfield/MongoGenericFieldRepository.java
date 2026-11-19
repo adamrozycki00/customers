@@ -4,7 +4,6 @@ import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
 
-import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
@@ -12,9 +11,9 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.springframework.dao.DuplicateKeyException;
@@ -23,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class MongoGenericFieldRepository implements GenericFieldPort {
+public class MongoGenericFieldRepository {
 
   private static final String COLLECTION = "genericFields";
   private static final String ID = "_id";
@@ -33,7 +32,6 @@ public class MongoGenericFieldRepository implements GenericFieldPort {
 
   private final MongoTemplate mongoTemplate;
 
-  @Override
   public GenericField insert(GenericField field) {
     var doc = toDoc(field);
 
@@ -46,8 +44,7 @@ public class MongoGenericFieldRepository implements GenericFieldPort {
     return field;
   }
 
-  @Override
-  public List<GenericField> findAllByTenantIncluding(TenantId tenantId, Set<String> expectedNames) {
+  public List<GenericField> findAllByTenant(TenantId tenantId) {
     var rawTenantId = tenantId.value();
     var lowestName = new MinKey();
     var highestName = new MaxKey();
@@ -58,10 +55,19 @@ public class MongoGenericFieldRepository implements GenericFieldPort {
     var fromFirstIdOfTenantFilter = gte(ID, firstIdOfTenant);
     var toLastIdOfTenantFilter = lte(ID, lastIdOfTenant);
     var tenantIdRangeFilter = and(fromFirstIdOfTenantFilter, toLastIdOfTenantFilter);
+    return findFields(tenantIdRangeFilter);
+  }
+
+  public List<GenericField> findAll() {
+    var allFieldsFilter = new Document();
+    return findFields(allFieldsFilter);
+  }
+
+  private List<GenericField> findFields(Bson filter) {
     var fields = new ArrayList<GenericField>();
 
     mongoTemplate.getCollection(COLLECTION)
-        .find(tenantIdRangeFilter)
+        .find(filter)
         .map(MongoGenericFieldRepository::toDomain)
         .into(fields);
 

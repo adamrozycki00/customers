@@ -5,9 +5,9 @@ import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 
 import com.example.customers.domain.customer.Customer;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;

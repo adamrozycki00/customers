@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.Getter;
+import lombok.NonNull;
 
 public class InMemoryGenericFieldDbAdapter implements GenericFieldPort {
 
@@ -23,7 +24,7 @@ public class InMemoryGenericFieldDbAdapter implements GenericFieldPort {
   }
 
   @Override
-  public List<GenericField> findAllByTenantIncluding(TenantId tenantId, Set<String> expectedNames) {
+  public List<GenericField> findAllByTenantIncluding(TenantId tenantId, @NonNull Set<String> expectedNames) {
     lastExpectedNames = expectedNames;
     return fields.stream()
         .filter(field -> field.getTenantId().equals(tenantId))
