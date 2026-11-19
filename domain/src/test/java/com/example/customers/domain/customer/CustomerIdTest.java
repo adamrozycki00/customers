@@ -10,76 +10,76 @@ import org.junit.jupiter.api.Test;
 class CustomerIdTest {
 
   @Nested
-  class ValidCustomerIds {
+  class ValidIds {
 
     @Test
-    void shouldKeepValidCustomerIdVerbatim() {
-      String inputValidCustomerId = "Cust_01-A";
+    void shouldKeepValidIdVerbatim() {
+      String inputValidId = "Cust_01-A";
 
-      var resultCustomerId = new CustomerId(inputValidCustomerId);
+      var resultId = new CustomerId(inputValidId);
 
-      assertThat(resultCustomerId.value()).isEqualTo("Cust_01-A");
+      assertThat(resultId.value()).isEqualTo("Cust_01-A");
     }
 
     @Test
-    void shouldAcceptMaxLengthCustomerId() {
-      String inputMaxLengthCustomerId = "a".repeat(128);
+    void shouldAcceptMaxLengthId() {
+      String inputMaxLengthId = "a".repeat(128);
 
-      var resultCustomerId = new CustomerId(inputMaxLengthCustomerId);
+      var resultId = new CustomerId(inputMaxLengthId);
 
-      assertThat(resultCustomerId.value()).hasSize(128);
+      assertThat(resultId.value()).hasSize(128);
     }
 
     @Test
-    void shouldTreatLowerCaseAndUpperCaseCustomerIdsAsDifferent() {
-      String inputLowerCaseCustomerId = "cust-1";
-      String inputUpperCaseCustomerId = "CUST-1";
+    void shouldTreatLowerCaseAndUpperCaseIdsAsDifferent() {
+      String inputLowerCaseId = "cust-1";
+      String inputUpperCaseId = "CUST-1";
 
-      var resultLowerCaseCustomerId = new CustomerId(inputLowerCaseCustomerId);
-      var resultUpperCaseCustomerId = new CustomerId(inputUpperCaseCustomerId);
+      var resultLowerCaseId = new CustomerId(inputLowerCaseId);
+      var resultUpperCaseId = new CustomerId(inputUpperCaseId);
 
-      assertThat(resultLowerCaseCustomerId).isNotEqualTo(resultUpperCaseCustomerId);
+      assertThat(resultLowerCaseId).isNotEqualTo(resultUpperCaseId);
     }
   }
 
   @Nested
-  class InvalidCustomerIds {
+  class InvalidIds {
 
     @Test
-    void shouldRejectNullCustomerId() {
-      String inputNullCustomerId = null;
+    void shouldRejectNullId() {
+      String inputNullId = null;
 
-      var thrown = catchThrowable(() -> new CustomerId(inputNullCustomerId));
+      var thrown = catchThrowable(() -> new CustomerId(inputNullId));
 
       assertThat(thrown).isInstanceOf(ValidationException.class)
           .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
     }
 
     @Test
-    void shouldRejectEmptyCustomerId() {
-      String inputEmptyCustomerId = "";
+    void shouldRejectEmptyId() {
+      String inputEmptyId = "";
 
-      var thrown = catchThrowable(() -> new CustomerId(inputEmptyCustomerId));
-
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
-    }
-
-    @Test
-    void shouldRejectCustomerIdWithInvalidCharacters() {
-      String inputCustomerIdWithInvalidCharacters = "CUST 1";
-
-      var thrown = catchThrowable(() -> new CustomerId(inputCustomerIdWithInvalidCharacters));
+      var thrown = catchThrowable(() -> new CustomerId(inputEmptyId));
 
       assertThat(thrown).isInstanceOf(ValidationException.class)
           .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
     }
 
     @Test
-    void shouldRejectTooLongCustomerId() {
-      String inputTooLongCustomerId = "a".repeat(129);
+    void shouldRejectIdWithInvalidCharacters() {
+      String inputIdWithInvalidCharacters = "CUST 1";
 
-      var thrown = catchThrowable(() -> new CustomerId(inputTooLongCustomerId));
+      var thrown = catchThrowable(() -> new CustomerId(inputIdWithInvalidCharacters));
+
+      assertThat(thrown).isInstanceOf(ValidationException.class)
+          .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
+    }
+
+    @Test
+    void shouldRejectTooLongId() {
+      String inputTooLongId = "a".repeat(129);
+
+      var thrown = catchThrowable(() -> new CustomerId(inputTooLongId));
 
       assertThat(thrown).isInstanceOf(ValidationException.class)
           .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
