@@ -83,7 +83,7 @@ Errors are returned as RFC 9457 Problem Details (`application/problem+json`).
 
 ### API behaviour
 
-9. Tenant ID is passed in the `X-Tenant-Id` header rather than as part of the path, as there is no requirement that tenants are RESTful resources. A missing or blank header is rejected with 400. The header is trusted, because authorization is out of scope.
+9. Tenant ID is passed in the `X-Tenant-Id` header rather than as part of the path, as there is no requirement that tenants are RESTful resources. A missing or blank header is rejected with 400. The tenant id is case-insensitive: it is upper-cased on input and stored upper-cased, so `flowers` and `FLOWERS` are the same tenant. The header is trusted, because authorization is out of scope.
 10. Different HTTP methods are used for customer creation (POST) and updating (PATCH), in order to take advantage of unique inserts in Mongo. A duplicate id gets 409.
 11. PATCH (`application/json`) changes only what the request mentions. Only generic field values can be cleared; names can only be replaced or kept, and the id cannot be changed. `first_name` and `last_name` are replaced when present and kept when absent or `null`. Inside `generic_fields`, a value sets the field, `null` clears it, and an absent key keeps it; `generic_fields` itself absent or `null` keeps all generic fields. Request bodies are strict: an unknown property (including `id` in a PATCH) is rejected with 400.
 12. A generic field value whose name is not registered for the tenant, or whose type does not match, is rejected with 400. Nothing is dropped silently.

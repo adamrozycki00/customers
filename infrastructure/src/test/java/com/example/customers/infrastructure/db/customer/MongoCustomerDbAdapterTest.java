@@ -57,7 +57,7 @@ class MongoCustomerDbAdapterTest {
   @Autowired
   private MongoCustomerDbAdapter underTest;
 
-  private final TenantId tenantId = new TenantId("flowers");
+  private final TenantId tenantId = new TenantId("FLOWERS");
   private final CustomerId id = new CustomerId("CUST-1");
   private final FirstName firstName = new FirstName("Anna");
   private final LastName lastName = new LastName("Smith");
@@ -88,7 +88,7 @@ class MongoCustomerDbAdapterTest {
           .firstName(firstName)
           .lastName(lastName)
           .build();
-      var expectedId = new Document("tenantId", "flowers")
+      var expectedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId)
           .append("firstName", "Anna")
@@ -140,7 +140,7 @@ class MongoCustomerDbAdapterTest {
           .tenantId(tenantId)
           .id(id)
           .build();
-      var expectedId = new Document("tenantId", "flowers")
+      var expectedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId);
       var expectedJson = expectedDoc.toJson();
@@ -153,7 +153,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldRejectDuplicateId() {
-      storeCustomerDoc("flowers", "CUST-1");
+      storeCustomerDoc("FLOWERS", "CUST-1");
       var inputCustomerWithDuplicateId = Customer.builder()
           .tenantId(tenantId)
           .id(id)
@@ -168,7 +168,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldRejectInsertingDeletedCustomer() {
-      storeDeletedCustomerDoc("flowers", "CUST-1");
+      storeDeletedCustomerDoc("FLOWERS", "CUST-1");
       var inputCustomerReusingId = Customer.builder()
           .tenantId(tenantId)
           .id(id)
@@ -209,7 +209,7 @@ class MongoCustomerDbAdapterTest {
           .append("note", "prefers tulips")
           .append("score", 42L)
           .append("since", storedDate);
-      var storedId = new Document("tenantId", "flowers")
+      var storedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var storedDoc = new Document("_id", storedId)
           .append("firstName", "Anna")
@@ -233,7 +233,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldFindCustomerWithoutOptionalFields() {
-      var storedId = new Document("tenantId", "flowers")
+      var storedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var storedDocWithoutOptionalFields = new Document("_id", storedId);
       mongoTemplate.insert(storedDocWithoutOptionalFields, CUSTOMERS_COLLECTION);
@@ -249,7 +249,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldNotFindDeletedCustomer() {
-      storeDeletedCustomerDoc("flowers", "CUST-1");
+      storeDeletedCustomerDoc("FLOWERS", "CUST-1");
 
       var resultCustomer = underTest.find(tenantId, id);
 
@@ -258,7 +258,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldNotFindCustomerOfOtherTenant() {
-      var storedIdWithSameIdOfOtherTenant = new Document("tenantId", "trees")
+      var storedIdWithSameIdOfOtherTenant = new Document("tenantId", "TREES")
           .append("id", id.value());
       var storedDocOfOtherTenant = new Document("_id", storedIdWithSameIdOfOtherTenant)
           .append("firstName", "Anna");
@@ -276,9 +276,9 @@ class MongoCustomerDbAdapterTest {
     @Test
     void shouldGetPageOrderedById() {
       // given three customers stored out of order
-      storeCustomerDoc("flowers", "CUST-3");
-      storeCustomerDoc("flowers", "CUST-1");
-      storeCustomerDoc("flowers", "CUST-2");
+      storeCustomerDoc("FLOWERS", "CUST-3");
+      storeCustomerDoc("FLOWERS", "CUST-1");
+      storeCustomerDoc("FLOWERS", "CUST-2");
       var inputPageRequest = new PageRequest(1, 10);
       var expectedIds = List.of("CUST-1", "CUST-2", "CUST-3");
 
@@ -293,11 +293,11 @@ class MongoCustomerDbAdapterTest {
     @Test
     void shouldGetRequestedPage() {
       // given five customers and a request for page 2 of size 2
-      storeCustomerDoc("flowers", "CUST-1");
-      storeCustomerDoc("flowers", "CUST-2");
-      storeCustomerDoc("flowers", "CUST-3");
-      storeCustomerDoc("flowers", "CUST-4");
-      storeCustomerDoc("flowers", "CUST-5");
+      storeCustomerDoc("FLOWERS", "CUST-1");
+      storeCustomerDoc("FLOWERS", "CUST-2");
+      storeCustomerDoc("FLOWERS", "CUST-3");
+      storeCustomerDoc("FLOWERS", "CUST-4");
+      storeCustomerDoc("FLOWERS", "CUST-5");
       var inputSecondPageOfTwo = new PageRequest(2, 2);
       var thirdId = new CustomerId("CUST-3");
       var fourthId = new CustomerId("CUST-4");
@@ -325,9 +325,9 @@ class MongoCustomerDbAdapterTest {
     @Test
     void shouldLeaveOutDeletedCustomers() {
       // given three customers, of which CUST-2 is deleted
-      storeCustomerDoc("flowers", "CUST-1");
-      storeDeletedCustomerDoc("flowers", "CUST-2");
-      storeCustomerDoc("flowers", "CUST-3");
+      storeCustomerDoc("FLOWERS", "CUST-1");
+      storeDeletedCustomerDoc("FLOWERS", "CUST-2");
+      storeCustomerDoc("FLOWERS", "CUST-3");
       var inputPageRequest = new PageRequest(1, 10);
       var firstId = new CustomerId("CUST-1");
       var thirdId = new CustomerId("CUST-3");
@@ -355,9 +355,9 @@ class MongoCustomerDbAdapterTest {
     @Test
     void shouldGetOnlyCustomersOfGivenTenant() {
       // given customers of flowers and trees
-      storeCustomerDoc("flowers", "CUST-1");
-      storeCustomerDoc("trees", "CUST-2");
-      storeCustomerDoc("flowers", "CUST-3");
+      storeCustomerDoc("FLOWERS", "CUST-1");
+      storeCustomerDoc("TREES", "CUST-2");
+      storeCustomerDoc("FLOWERS", "CUST-3");
       var inputPageRequest = new PageRequest(1, 10);
       var firstId = new CustomerId("CUST-1");
       var thirdId = new CustomerId("CUST-3");
@@ -385,8 +385,8 @@ class MongoCustomerDbAdapterTest {
     @Test
     void shouldGetPageUsingIndex() {
       // given customers of two tenants and the profiler on
-      storeCustomerDoc("flowers", "CUST-1");
-      storeCustomerDoc("trees", "CUST-2");
+      storeCustomerDoc("FLOWERS", "CUST-1");
+      storeCustomerDoc("TREES", "CUST-2");
       var inputPageRequest = new PageRequest(1, 10);
       enableProfiler();
       String expectedPlanSummary = "IXSCAN { _id: 1 }";
@@ -417,7 +417,7 @@ class MongoCustomerDbAdapterTest {
           .genericFieldsToSet(noGenericFieldsToSet)
           .genericFieldsToClear(noGenericFieldsToClear)
           .build();
-      var expectedId = new Document("tenantId", "flowers")
+      var expectedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId)
           .append("firstName", "Maria")
@@ -452,7 +452,7 @@ class MongoCustomerDbAdapterTest {
           .genericFieldsToSet(noGenericFieldsToSet)
           .genericFieldsToClear(noGenericFieldsToClear)
           .build();
-      var expectedId = new Document("tenantId", "flowers")
+      var expectedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId)
           .append("firstName", "Maria")
@@ -477,7 +477,7 @@ class MongoCustomerDbAdapterTest {
       // given a customer with vip and note, and an update setting vip and score
       var storedGenericFields = new Document("vip", true)
           .append("note", "prefers tulips");
-      var storedId = new Document("tenantId", "flowers")
+      var storedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var storedDoc = new Document("_id", storedId)
           .append("genericFields", storedGenericFields);
@@ -518,7 +518,7 @@ class MongoCustomerDbAdapterTest {
       // given a customer with vip and note, and an update clearing vip
       var storedGenericFields = new Document("vip", true)
           .append("note", "prefers tulips");
-      var storedId = new Document("tenantId", "flowers")
+      var storedId = new Document("tenantId", "FLOWERS")
           .append("id", "CUST-1");
       var storedDoc = new Document("_id", storedId)
           .append("genericFields", storedGenericFields);
@@ -548,7 +548,7 @@ class MongoCustomerDbAdapterTest {
     @Test
     void shouldNotUpdateDeletedCustomer() {
       // given a deleted customer and an update replacing the first name
-      storeDeletedCustomerDoc("flowers", "CUST-1");
+      storeDeletedCustomerDoc("FLOWERS", "CUST-1");
       var newFirstName = new FirstName("Maria");
       var replaceFirstName = new FieldUpdate.Replace<>(newFirstName);
       var keepLastName = new FieldUpdate.Keep<LastName>();
@@ -638,7 +638,7 @@ class MongoCustomerDbAdapterTest {
 
     @Test
     void shouldKeepFirstDeletedAt() {
-      storeDeletedCustomerDoc("flowers", "CUST-1");
+      storeDeletedCustomerDoc("FLOWERS", "CUST-1");
       var expectedDeletedAt = Date.from(EARLIER_DELETED_AT);
 
       underTest.delete(tenantId, id);
@@ -681,7 +681,7 @@ class MongoCustomerDbAdapterTest {
   }
 
   private void storeCustomerDocWithNames() {
-    var storedId = new Document("tenantId", "flowers")
+    var storedId = new Document("tenantId", "FLOWERS")
         .append("id", "CUST-1");
     var storedDoc = new Document("_id", storedId)
         .append("firstName", "Anna")

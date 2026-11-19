@@ -154,6 +154,25 @@ class CustomerServiceTest {
     }
 
     @Test
+    void shouldGetCustomerRegardlessOfTenantIdCase() {
+      // given that Anna is stored for tenant flowers and a query for tenant FLOWERS
+      var tenantId = new TenantId("flowers");
+      var id = new CustomerId("CUST-1");
+      var firstName = new FirstName("Anna");
+      var storedCustomer = Customer.builder()
+          .tenantId(tenantId)
+          .id(id)
+          .firstName(firstName)
+          .build();
+      customerRepo.insert(storedCustomer);
+      var inputQueryWithUpperCaseTenantId = new GetCustomerUseCase.Query("FLOWERS", "CUST-1");
+
+      var resultCustomer = underTest.get(inputQueryWithUpperCaseTenantId);
+
+      assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(storedCustomer);
+    }
+
+    @Test
     void shouldRejectUnknownCustomer() {
       var inputQueryForUnknownCustomer = new GetCustomerUseCase.Query("flowers", "CUST-404");
 

@@ -34,7 +34,7 @@ class MongoGenericFieldDbAdapterTest {
   @Autowired
   private MongoGenericFieldDbAdapter underTest;
 
-  private final TenantId tenantId = new TenantId("flowers");
+  private final TenantId tenantId = new TenantId("FLOWERS");
   private final FieldName vipName = new FieldName("vip");
 
   @BeforeEach
@@ -55,7 +55,7 @@ class MongoGenericFieldDbAdapterTest {
         .name(vipName)
         .type(FieldType.BOOLEAN)
         .build();
-    var expectedId = new Document("tenantId", "flowers")
+    var expectedId = new Document("tenantId", "FLOWERS")
         .append("name", "vip");
     var expectedDoc = new Document("_id", expectedId)
         .append("type", "BOOLEAN");
@@ -69,7 +69,7 @@ class MongoGenericFieldDbAdapterTest {
 
   @Test
   void shouldRejectDuplicateFieldName() {
-    storeFieldDocument("flowers", "vip", "BOOLEAN");
+    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
     var inputFieldWithDuplicateName = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
@@ -84,7 +84,7 @@ class MongoGenericFieldDbAdapterTest {
 
   @Test
   void shouldFindField() {
-    storeFieldDocument("flowers", "vip", "BOOLEAN");
+    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
     var expectedField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
@@ -100,7 +100,7 @@ class MongoGenericFieldDbAdapterTest {
   @EnumSource(FieldType.class)
   void shouldFindFieldOfEveryType(FieldType fieldType) {
     var storedType = fieldType.name();
-    storeFieldDocument("flowers", "vip", storedType);
+    storeFieldDocument("FLOWERS", "vip", storedType);
 
     var resultFields = underTest.findAllByTenant(tenantId);
 
@@ -109,8 +109,8 @@ class MongoGenericFieldDbAdapterTest {
 
   @Test
   void shouldFindOnlyFieldsOfGivenTenant() {
-    storeFieldDocument("flowers", "vip", "BOOLEAN");
-    storeFieldDocument("trees", "vip", "STRING");
+    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("TREES", "vip", "STRING");
     var expectedField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
@@ -124,8 +124,8 @@ class MongoGenericFieldDbAdapterTest {
 
   @Test
   void shouldFindTenantFieldsUsingIndex() {
-    storeFieldDocument("flowers", "vip", "BOOLEAN");
-    storeFieldDocument("trees", "vip", "STRING");
+    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("TREES", "vip", "STRING");
     enableProfiler();
     String expectedPlanSummary = "IXSCAN { _id: 1 }";
 

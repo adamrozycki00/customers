@@ -1,8 +1,10 @@
 package com.example.customers.domain.tenant;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.upperCase;
 
 import com.example.customers.domain.exception.ValidationException;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public record TenantId(String value) {
@@ -11,6 +13,7 @@ public record TenantId(String value) {
   private static final Pattern LETTERS_DIGITS_UNDERSCORES_OR_HYPHENS = Pattern.compile("[A-Za-z0-9_-]+");
 
   public TenantId {
+    value = upperCase(value, Locale.ROOT);
     validate(value);
   }
 

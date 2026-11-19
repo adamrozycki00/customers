@@ -13,12 +13,12 @@ class TenantIdTest {
   class ValidTenantIds {
 
     @Test
-    void shouldKeepValidTenantIdVerbatim() {
-      String inputValidTenantId = "flowers";
+    void shouldUpperCaseTenantId() {
+      String inputLowerCaseTenantId = "flowers";
 
-      var resultTenantId = new TenantId(inputValidTenantId);
+      var resultTenantId = new TenantId(inputLowerCaseTenantId);
 
-      assertThat(resultTenantId.value()).isEqualTo("flowers");
+      assertThat(resultTenantId.value()).isEqualTo("FLOWERS");
     }
 
     @Test
@@ -31,14 +31,14 @@ class TenantIdTest {
     }
 
     @Test
-    void shouldTreatLowerCaseAndUpperCaseTenantIdsAsDifferent() {
+    void shouldTreatLowerCaseAndUpperCaseTenantIdsAsEqual() {
       String inputLowerCaseTenantId = "flowers";
       String inputUpperCaseTenantId = "Flowers";
 
       var resultLowerCaseTenantId = new TenantId(inputLowerCaseTenantId);
       var resultUpperCaseTenantId = new TenantId(inputUpperCaseTenantId);
 
-      assertThat(resultLowerCaseTenantId).isNotEqualTo(resultUpperCaseTenantId);
+      assertThat(resultLowerCaseTenantId).isEqualTo(resultUpperCaseTenantId);
     }
   }
 
