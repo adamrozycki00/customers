@@ -12,9 +12,9 @@ import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.domain.customer.Customer;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.FieldName;
@@ -26,6 +26,7 @@ import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -80,6 +81,30 @@ class CustomerServiceTest {
       var resultCustomer = underTest.create(inputCommand);
 
       assertThat(resultCustomer).usingRecursiveComparison().isEqualTo(expectedCustomer);
+    }
+
+    @Test
+    void shouldAskForGenericFieldsOfTheRequest() {
+      // given a registered vip field and a command creating a customer with vip
+      var tenantId = new TenantId("flowers");
+      var vipName = new FieldName("vip");
+      var vipField = GenericField.builder()
+          .tenantId(tenantId)
+          .name(vipName)
+          .type(FieldType.BOOLEAN)
+          .build();
+      genericFieldRepo.insert(vipField);
+      Map<String, Object> inputGenericFields = Map.of("vip", true);
+      var inputCommand = CreateCustomerUseCase.Command.builder()
+          .tenantId("flowers")
+          .id("CUST-1")
+          .genericFields(inputGenericFields)
+          .build();
+      Set<String> expectedNames = Set.of("vip");
+
+      underTest.create(inputCommand);
+
+      assertThat(genericFieldRepo.getLastExpectedNames()).isEqualTo(expectedNames);
     }
 
     @Test

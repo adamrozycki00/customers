@@ -4,10 +4,15 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 
 import java.util.List;
+import java.util.Set;
 
 public interface GenericFieldPort {
 
   GenericField insert(GenericField field);
 
-  List<GenericField> findAllByTenant(TenantId tenantId);
+  /**
+   * Returns all generic fields of the tenant. If any of the expected names is missing from a cached result,
+   * the result is refreshed from the source before it is returned. The expected names never filter the result.
+   */
+  List<GenericField> findAllByTenantIncluding(TenantId tenantId, Set<String> expectedNames);
 }

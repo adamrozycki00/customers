@@ -12,6 +12,7 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.MaxKey;
@@ -22,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class MongoGenericFieldDbAdapter implements GenericFieldPort {
+public class MongoGenericFieldRepository implements GenericFieldPort {
 
   private static final String COLLECTION = "genericFields";
   private static final String ID = "_id";
@@ -46,7 +47,7 @@ public class MongoGenericFieldDbAdapter implements GenericFieldPort {
   }
 
   @Override
-  public List<GenericField> findAllByTenant(TenantId tenantId) {
+  public List<GenericField> findAllByTenantIncluding(TenantId tenantId, Set<String> expectedNames) {
     var rawTenantId = tenantId.value();
     var lowestName = new MinKey();
     var highestName = new MaxKey();
@@ -61,7 +62,7 @@ public class MongoGenericFieldDbAdapter implements GenericFieldPort {
 
     mongoTemplate.getCollection(COLLECTION)
         .find(tenantIdRangeFilter)
-        .map(MongoGenericFieldDbAdapter::toDomain)
+        .map(MongoGenericFieldRepository::toDomain)
         .into(fields);
 
     return fields;

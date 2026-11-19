@@ -43,9 +43,10 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
   public Customer update(UpdateCustomerUseCase.Command command) {
     var tenantId = new TenantId(command.tenantId());
     var id = new CustomerId(command.id());
-    var registeredFields = genericFieldPort.findAllByTenant(tenantId);
-    var tenantGenericFields = TenantGenericFields.of(registeredFields);
     var rawGenericFieldsToUpdate = getRawGenericFieldsToUpdate(command);
+    var expectedFieldNames = rawGenericFieldsToUpdate.keySet();
+    var registeredFields = genericFieldPort.findAllByTenantIncluding(tenantId, expectedFieldNames);
+    var tenantGenericFields = TenantGenericFields.of(registeredFields);
     var genericFieldsToUpdate = buildGenericFieldsToUpdate(tenantGenericFields, rawGenericFieldsToUpdate);
     var customerUpdate = buildCustomerUpdate(command, genericFieldsToUpdate);
 

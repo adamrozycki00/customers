@@ -1,5 +1,6 @@
 package com.example.customers.application.service;
 
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.customers.application.adapter.InMemoryGenericFieldDbAdapter;
@@ -9,6 +10,7 @@ import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class GenericFieldServiceTest {
@@ -16,6 +18,7 @@ class GenericFieldServiceTest {
   private final InMemoryGenericFieldDbAdapter repo = new InMemoryGenericFieldDbAdapter();
 
   private final RegisterGenericFieldUseCase underTest = new GenericFieldService(repo);
+  private final Set<String> noExpectedNames = emptySet();
 
   @Test
   void shouldReturnRegisteredField() {
@@ -49,7 +52,7 @@ class GenericFieldServiceTest {
 
     underTest.register(inputCommand);
 
-    var resultStoredFields = repo.findAllByTenant(tenantId);
+    var resultStoredFields = repo.findAllByTenantIncluding(tenantId, noExpectedNames);
     assertThat(resultStoredFields)
         .extracting(GenericField::getName)
         .containsExactly(expectedName);

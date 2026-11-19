@@ -1,5 +1,6 @@
 package com.example.customers.infrastructure.db.genericfield;
 
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -11,6 +12,7 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,8 +25,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @DataMongoTest
-@Import({TestcontainersConfiguration.class, MongoGenericFieldDbAdapter.class})
-class MongoGenericFieldDbAdapterTest {
+@Import({TestcontainersConfiguration.class, MongoGenericFieldRepository.class})
+class MongoGenericFieldRepositoryTest {
 
   private static final String GENERIC_FIELDS_COLLECTION = "genericFields";
 
@@ -32,10 +34,11 @@ class MongoGenericFieldDbAdapterTest {
   private MongoTemplate mongoTemplate;
 
   @Autowired
-  private MongoGenericFieldDbAdapter underTest;
+  private MongoGenericFieldRepository underTest;
 
   private final TenantId tenantId = new TenantId("FLOWERS");
   private final FieldName vipName = new FieldName("vip");
+  private final Set<String> noExpectedNames = emptySet();
 
   @BeforeEach
   void clearCollection() {
@@ -91,7 +94,7 @@ class MongoGenericFieldDbAdapterTest {
         .type(FieldType.BOOLEAN)
         .build();
 
-    var resultFields = underTest.findAllByTenant(tenantId);
+    var resultFields = underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
 
     assertThat(resultFields).singleElement().usingRecursiveComparison().isEqualTo(expectedField);
   }
@@ -102,7 +105,7 @@ class MongoGenericFieldDbAdapterTest {
     var storedType = fieldType.name();
     storeFieldDocument("FLOWERS", "vip", storedType);
 
-    var resultFields = underTest.findAllByTenant(tenantId);
+    var resultFields = underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
 
     assertThat(resultFields).singleElement().extracting(GenericField::getType).isEqualTo(fieldType);
   }
@@ -117,7 +120,7 @@ class MongoGenericFieldDbAdapterTest {
         .type(FieldType.BOOLEAN)
         .build();
 
-    var resultFields = underTest.findAllByTenant(tenantId);
+    var resultFields = underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
 
     assertThat(resultFields).singleElement().usingRecursiveComparison().isEqualTo(expectedField);
   }
@@ -129,7 +132,7 @@ class MongoGenericFieldDbAdapterTest {
     enableProfiler();
     String expectedPlanSummary = "IXSCAN { _id: 1 }";
 
-    underTest.findAllByTenant(tenantId);
+    underTest.findAllByTenantIncluding(tenantId, noExpectedNames);
 
     var planSummaries = getFindPlanSummaries();
     assertThat(planSummaries).singleElement().isEqualTo(expectedPlanSummary);

@@ -37,7 +37,8 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
     var firstName = nonNull(command.firstName()) ? new FirstName(command.firstName()) : null;
     var lastName = nonNull(command.lastName()) ? new LastName(command.lastName()) : null;
 
-    var registeredFields = genericFieldPort.findAllByTenant(tenantId);
+    var expectedFieldNames = command.genericFields().keySet();
+    var registeredFields = genericFieldPort.findAllByTenantIncluding(tenantId, expectedFieldNames);
     var tenantGenericFields = TenantGenericFields.of(registeredFields);
     var genericFields = tenantGenericFields.toTypedValues(command.genericFields());
 
