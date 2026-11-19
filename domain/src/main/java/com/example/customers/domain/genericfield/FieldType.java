@@ -22,7 +22,7 @@ public enum FieldType {
   INTEGER,
   DATETIME;
 
-  private static final String UNKNOWN_FIELD_TYPE = "Unknown field type; use one of BOOL, STRING, INTEGER, DATETIME";
+  private static final String UNKNOWN_FIELD_TYPE_MSG = "Unknown field type; use one of BOOL, STRING, INTEGER, DATETIME";
   private static final DateTimeFormatter ISO_DATETIME_DEFAULTING_TO_UTC = ISO_DATE_TIME.withZone(UTC);
 
   public static FieldType of(String rawType) {
@@ -88,7 +88,7 @@ public enum FieldType {
 
   private static void validate(String rawType) {
     if (isNull(rawType)) {
-      throw new ValidationException(UNKNOWN_FIELD_TYPE);
+      throw new ValidationException(UNKNOWN_FIELD_TYPE_MSG);
     }
   }
 
@@ -99,6 +99,6 @@ public enum FieldType {
     return stream(allTypes)
         .filter(type -> type.name().equals(upperCaseType))
         .findFirst()
-        .orElseThrow(() -> new ValidationException(UNKNOWN_FIELD_TYPE));
+        .orElseThrow(() -> new ValidationException(UNKNOWN_FIELD_TYPE_MSG));
   }
 }

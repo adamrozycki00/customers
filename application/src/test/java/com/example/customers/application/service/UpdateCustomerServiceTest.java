@@ -28,16 +28,16 @@ import org.junit.jupiter.api.Test;
 
 class UpdateCustomerServiceTest {
 
+  private static final TenantId TENANT_ID = new TenantId("flowers");
+  private static final CustomerId ID = new CustomerId("CUST-1");
+  private static final FirstName STORED_FIRST_NAME = new FirstName("Anna");
+  private static final LastName STORED_LAST_NAME = new LastName("Smith");
+  private static final FieldName VIP_NAME = new FieldName("vip");
+
   private final InMemoryCustomerDbAdapter customerRepo = new InMemoryCustomerDbAdapter();
   private final InMemoryGenericFieldDbAdapter genericFieldRepo = new InMemoryGenericFieldDbAdapter();
 
   private final UpdateCustomerService underTest = new UpdateCustomerService(customerRepo, genericFieldRepo);
-
-  private final TenantId tenantId = new TenantId("flowers");
-  private final CustomerId id = new CustomerId("CUST-1");
-  private final FirstName storedFirstName = new FirstName("Anna");
-  private final LastName storedLastName = new LastName("Smith");
-  private final FieldName vipName = new FieldName("vip");
 
   @Test
   void shouldSetFirstName() {
@@ -52,10 +52,10 @@ class UpdateCustomerServiceTest {
         .build();
     var expectedFirstName = new FirstName("Maria");
     var expectedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .id(id)
+        .tenantId(TENANT_ID)
+        .id(ID)
         .firstName(expectedFirstName)
-        .lastName(storedLastName)
+        .lastName(STORED_LAST_NAME)
         .build();
 
     var resultCustomer = underTest.update(inputCommand);
@@ -76,9 +76,9 @@ class UpdateCustomerServiceTest {
         .build();
     var expectedLastName = new LastName("Nowak");
     var expectedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .id(id)
-        .firstName(storedFirstName)
+        .tenantId(TENANT_ID)
+        .id(ID)
+        .firstName(STORED_FIRST_NAME)
         .lastName(expectedLastName)
         .build();
 
@@ -101,12 +101,12 @@ class UpdateCustomerServiceTest {
         .genericFields(inputGenericFields)
         .build();
     var expectedVipValue = new BooleanValue(true);
-    Map<FieldName, GenericFieldValue> expectedGenericFields = Map.of(vipName, expectedVipValue);
+    Map<FieldName, GenericFieldValue> expectedGenericFields = Map.of(VIP_NAME, expectedVipValue);
     var expectedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .id(id)
-        .firstName(storedFirstName)
-        .lastName(storedLastName)
+        .tenantId(TENANT_ID)
+        .id(ID)
+        .firstName(STORED_FIRST_NAME)
+        .lastName(STORED_LAST_NAME)
         .genericFields(expectedGenericFields)
         .build();
 
@@ -120,7 +120,7 @@ class UpdateCustomerServiceTest {
     // given a customer with vip set and a command clearing it
     registerVipField();
     var storedVipValue = new BooleanValue(true);
-    Map<FieldName, GenericFieldValue> storedGenericFields = Map.of(vipName, storedVipValue);
+    Map<FieldName, GenericFieldValue> storedGenericFields = Map.of(VIP_NAME, storedVipValue);
     storeCustomer(storedGenericFields);
     Set<String> vipMask = Set.of("genericFields.vip");
     Map<String, Object> inputGenericFieldsClearingVip = new HashMap<>();
@@ -211,10 +211,10 @@ class UpdateCustomerServiceTest {
         .firstName("Maria")
         .build();
     var expectedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .id(id)
-        .firstName(storedFirstName)
-        .lastName(storedLastName)
+        .tenantId(TENANT_ID)
+        .id(ID)
+        .firstName(STORED_FIRST_NAME)
+        .lastName(STORED_LAST_NAME)
         .build();
 
     var resultCustomer = underTest.update(inputCommand);
@@ -228,7 +228,7 @@ class UpdateCustomerServiceTest {
     registerVipField();
     var scoreName = new FieldName("score");
     var scoreField = GenericField.builder()
-        .tenantId(tenantId)
+        .tenantId(TENANT_ID)
         .name(scoreName)
         .type(FieldType.INTEGER)
         .build();
@@ -266,8 +266,8 @@ class UpdateCustomerServiceTest {
 
   private void registerVipField() {
     var vipField = GenericField.builder()
-        .tenantId(tenantId)
-        .name(vipName)
+        .tenantId(TENANT_ID)
+        .name(VIP_NAME)
         .type(FieldType.BOOL)
         .build();
     genericFieldRepo.insert(vipField);
@@ -280,10 +280,10 @@ class UpdateCustomerServiceTest {
 
   private void storeCustomer(Map<FieldName, GenericFieldValue> genericFields) {
     var storedCustomer = Customer.builder()
-        .tenantId(tenantId)
-        .id(id)
-        .firstName(storedFirstName)
-        .lastName(storedLastName)
+        .tenantId(TENANT_ID)
+        .id(ID)
+        .firstName(STORED_FIRST_NAME)
+        .lastName(STORED_LAST_NAME)
         .genericFields(genericFields)
         .build();
     customerRepo.insert(storedCustomer);

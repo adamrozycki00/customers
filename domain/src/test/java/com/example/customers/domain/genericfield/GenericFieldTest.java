@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 class GenericFieldTest {
 
-  private final TenantId validTenantId = new TenantId("flowers");
-  private final FieldName validName = new FieldName("vip");
+  private static final TenantId VALID_TENANT_ID = new TenantId("flowers");
+  private static final FieldName VALID_NAME = new FieldName("vip");
 
   @Nested
   class Equality {
@@ -19,13 +19,13 @@ class GenericFieldTest {
     @Test
     void shouldBeEqualWhenIdsAreEqual() {
       var booleanField = GenericField.builder()
-          .tenantId(validTenantId)
-          .name(validName)
+          .tenantId(VALID_TENANT_ID)
+          .name(VALID_NAME)
           .type(FieldType.BOOL)
           .build();
       var sameFieldWithOtherType = GenericField.builder()
-          .tenantId(validTenantId)
-          .name(validName)
+          .tenantId(VALID_TENANT_ID)
+          .name(VALID_NAME)
           .type(FieldType.STRING)
           .build();
 
@@ -38,12 +38,12 @@ class GenericFieldTest {
     void shouldNotBeEqualWhenNamesDiffer() {
       var otherName = new FieldName("score");
       var field = GenericField.builder()
-          .tenantId(validTenantId)
-          .name(validName)
+          .tenantId(VALID_TENANT_ID)
+          .name(VALID_NAME)
           .type(FieldType.BOOL)
           .build();
       var otherField = GenericField.builder()
-          .tenantId(validTenantId)
+          .tenantId(VALID_TENANT_ID)
           .name(otherName)
           .type(FieldType.BOOL)
           .build();
@@ -57,13 +57,13 @@ class GenericFieldTest {
     void shouldNotBeEqualWhenTenantIdsDiffer() {
       var otherTenantId = new TenantId("roses");
       var field = GenericField.builder()
-          .tenantId(validTenantId)
-          .name(validName)
+          .tenantId(VALID_TENANT_ID)
+          .name(VALID_NAME)
           .type(FieldType.BOOL)
           .build();
       var otherTenantsField = GenericField.builder()
           .tenantId(otherTenantId)
-          .name(validName)
+          .name(VALID_NAME)
           .type(FieldType.BOOL)
           .build();
 
@@ -82,7 +82,7 @@ class GenericFieldTest {
 
       var thrown = catchThrowable(() -> GenericField.builder()
           .tenantId(inputMissingTenantId)
-          .name(validName)
+          .name(VALID_NAME)
           .type(FieldType.BOOL)
           .build());
 
@@ -94,7 +94,7 @@ class GenericFieldTest {
       FieldName inputNullName = null;
 
       var thrown = catchThrowable(() -> GenericField.builder()
-          .tenantId(validTenantId)
+          .tenantId(VALID_TENANT_ID)
           .name(inputNullName)
           .type(FieldType.BOOL)
           .build());
@@ -107,8 +107,8 @@ class GenericFieldTest {
       FieldType inputNullType = null;
 
       var thrown = catchThrowable(() -> GenericField.builder()
-          .tenantId(validTenantId)
-          .name(validName)
+          .tenantId(VALID_TENANT_ID)
+          .name(VALID_NAME)
           .type(inputNullType)
           .build());
 

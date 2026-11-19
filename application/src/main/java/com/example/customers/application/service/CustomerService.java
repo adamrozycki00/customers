@@ -3,13 +3,14 @@ package com.example.customers.application.service;
 import static java.util.Objects.nonNull;
 
 import com.example.customers.application.port.CustomerPage;
-import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.application.port.out.GenericFieldPort;
+import com.example.customers.application.port.out.dto.PageRequest;
+import com.example.customers.application.service.settings.PagingSettings;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.customer.FirstName;
@@ -20,6 +21,9 @@ import com.example.customers.domain.genericfield.TenantGenericFields;
 import com.example.customers.domain.tenant.TenantId;
 import lombok.Builder;
 
+/**
+ * Serves all customer use cases except updating, which {@link UpdateCustomerService} serves.
+ */
 @Builder
 public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCase, ListCustomersUseCase,
     DeleteCustomerUseCase {

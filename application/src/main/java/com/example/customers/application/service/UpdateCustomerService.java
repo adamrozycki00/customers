@@ -10,11 +10,11 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
-import com.example.customers.application.port.CustomerUpdate;
-import com.example.customers.application.port.FieldUpdate;
 import com.example.customers.application.port.in.UpdateCustomerUseCase;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.application.port.out.GenericFieldPort;
+import com.example.customers.application.port.out.dto.CustomerUpdate;
+import com.example.customers.application.port.out.dto.FieldUpdate;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.customer.FirstName;

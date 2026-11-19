@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 
 class CustomerTest {
 
-  private final TenantId validTenantId = new TenantId("flowers");
-  private final CustomerId validId = new CustomerId("CUST-1");
+  private static final TenantId VALID_TENANT_ID = new TenantId("flowers");
+  private static final CustomerId VALID_ID = new CustomerId("CUST-1");
 
   @Nested
   class Equality {
@@ -24,13 +24,13 @@ class CustomerTest {
       var firstNameBefore = new FirstName("Anna");
       var firstNameAfter = new FirstName("Maria");
       var customerBeforeRename = Customer.builder()
-          .tenantId(validTenantId)
-          .id(validId)
+          .tenantId(VALID_TENANT_ID)
+          .id(VALID_ID)
           .firstName(firstNameBefore)
           .build();
       var customerAfterRename = Customer.builder()
-          .tenantId(validTenantId)
-          .id(validId)
+          .tenantId(VALID_TENANT_ID)
+          .id(VALID_ID)
           .firstName(firstNameAfter)
           .build();
 
@@ -43,11 +43,11 @@ class CustomerTest {
     void shouldNotBeEqualWhenIdsDiffer() {
       var otherId = new CustomerId("CUST-2");
       var customer = Customer.builder()
-          .tenantId(validTenantId)
-          .id(validId)
+          .tenantId(VALID_TENANT_ID)
+          .id(VALID_ID)
           .build();
       var otherCustomer = Customer.builder()
-          .tenantId(validTenantId)
+          .tenantId(VALID_TENANT_ID)
           .id(otherId)
           .build();
 
@@ -60,12 +60,12 @@ class CustomerTest {
     void shouldNotBeEqualWhenTenantIdsDiffer() {
       var otherTenantId = new TenantId("roses");
       var customer = Customer.builder()
-          .tenantId(validTenantId)
-          .id(validId)
+          .tenantId(VALID_TENANT_ID)
+          .id(VALID_ID)
           .build();
       var otherTenantsCustomer = Customer.builder()
           .tenantId(otherTenantId)
-          .id(validId)
+          .id(VALID_ID)
           .build();
 
       var resultEquality = customer.equals(otherTenantsCustomer);
@@ -82,7 +82,7 @@ class CustomerTest {
       var inputValidId = new CustomerId("CUST-1");
 
       var resultCustomer = Customer.builder()
-          .tenantId(validTenantId)
+          .tenantId(VALID_TENANT_ID)
           .id(inputValidId)
           .build();
 
@@ -93,8 +93,8 @@ class CustomerTest {
     @Test
     void shouldHaveEmptyGenericFieldsWhenOmitted() {
       var customerBuilderWithoutGenericFields = Customer.builder()
-          .tenantId(validTenantId)
-          .id(validId);
+          .tenantId(VALID_TENANT_ID)
+          .id(VALID_ID);
 
       var resultCustomer = customerBuilderWithoutGenericFields.build();
 
@@ -106,8 +106,8 @@ class CustomerTest {
       Map<FieldName, GenericFieldValue> inputMissingGenericFields = null;
 
       var resultCustomer = Customer.builder()
-          .tenantId(validTenantId)
-          .id(validId)
+          .tenantId(VALID_TENANT_ID)
+          .id(VALID_ID)
           .genericFields(inputMissingGenericFields)
           .build();
 
@@ -123,7 +123,7 @@ class CustomerTest {
       CustomerId inputMissingId = null;
 
       var thrown = catchThrowable(() -> Customer.builder()
-          .tenantId(validTenantId)
+          .tenantId(VALID_TENANT_ID)
           .id(inputMissingId)
           .build());
 
@@ -136,7 +136,7 @@ class CustomerTest {
 
       var thrown = catchThrowable(() -> Customer.builder()
           .tenantId(inputMissingTenantId)
-          .id(validId)
+          .id(VALID_ID)
           .build());
 
       assertThat(thrown).isInstanceOf(ValidationException.class);

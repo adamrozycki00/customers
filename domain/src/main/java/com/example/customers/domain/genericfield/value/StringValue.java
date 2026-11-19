@@ -1,8 +1,8 @@
 package com.example.customers.domain.genericfield.value;
 
-import com.example.customers.domain.exception.ValidationException;
 import static java.util.Objects.isNull;
 
+import com.example.customers.domain.exception.ValidationException;
 
 public record StringValue(String value) implements GenericFieldValue {
 

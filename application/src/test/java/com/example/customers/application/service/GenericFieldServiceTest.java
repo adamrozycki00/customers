@@ -15,10 +15,11 @@ import org.junit.jupiter.api.Test;
 
 class GenericFieldServiceTest {
 
+  private static final Set<String> NO_EXPECTED_NAMES = emptySet();
+
   private final InMemoryGenericFieldDbAdapter repo = new InMemoryGenericFieldDbAdapter();
 
   private final RegisterGenericFieldUseCase underTest = new GenericFieldService(repo);
-  private final Set<String> noExpectedNames = emptySet();
 
   @Test
   void shouldReturnRegisteredField() {
@@ -52,7 +53,7 @@ class GenericFieldServiceTest {
 
     underTest.register(inputCommand);
 
-    var resultStoredFields = repo.findAllByTenantIncluding(tenantId, noExpectedNames);
+    var resultStoredFields = repo.findAllByTenantIncluding(tenantId, NO_EXPECTED_NAMES);
     assertThat(resultStoredFields)
         .extracting(GenericField::getName)
         .containsExactly(expectedName);

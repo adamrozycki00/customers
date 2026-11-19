@@ -1,9 +1,9 @@
 package com.example.customers.domain.customer;
 
-import com.example.customers.domain.exception.ValidationException;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 
+import com.example.customers.domain.exception.ValidationException;
 
 public record FirstName(String value) {
 

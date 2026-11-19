@@ -3,7 +3,7 @@ package com.example.customers.it;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-import com.example.customers.TestcontainersConfiguration;
+import com.example.customers.infra.config.TestcontainersConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-@Import(TestcontainersConfiguration.class)
+@Import(TestcontainersConfig.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @AutoConfigureRestTestClient
 class CustomerIT {
@@ -23,15 +23,15 @@ class CustomerIT {
   private static final String CUSTOMERS_COLLECTION = "customers";
 
   @Autowired
-  private RestTestClient restTestClient;
+  private RestTestClient client;
 
   @Autowired
-  private MongoTemplate mongoTemplate;
+  private MongoTemplate mongo;
 
   @BeforeEach
   void clearCollections() {
-    mongoTemplate.dropCollection(GENERIC_FIELDS_COLLECTION);
-    mongoTemplate.dropCollection(CUSTOMERS_COLLECTION);
+    mongo.dropCollection(GENERIC_FIELDS_COLLECTION);
+    mongo.dropCollection(CUSTOMERS_COLLECTION);
   }
 
   @Test
@@ -47,7 +47,7 @@ class CustomerIT {
           "generic_fields": {"vip": true, "score": 42, "since": "1990-05-20T00:00:00+02:00"}
         }
         """;
-    restTestClient.post()
+    client.post()
         .uri("/customers")
         .header("X-Tenant-Id", "flowers")
         .contentType(APPLICATION_JSON)
@@ -62,7 +62,7 @@ class CustomerIT {
         }
         """;
 
-    var resultResponse = restTestClient.get()
+    var resultResponse = client.get()
         .uri("/customers/CUST-1")
         .header("X-Tenant-Id", "flowers")
         .exchange();
@@ -75,7 +75,7 @@ class CustomerIT {
     String registerRequest = """
         {"name": "%s", "type": "%s"}
         """.formatted(name, type);
-    restTestClient.post()
+    client.post()
         .uri("/generic-fields")
         .header("X-Tenant-Id", "flowers")
         .contentType(APPLICATION_JSON)

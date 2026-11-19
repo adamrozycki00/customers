@@ -1,10 +1,10 @@
 package com.example.customers.application.adapter;
 
 import com.example.customers.application.port.CustomerPage;
-import com.example.customers.application.port.CustomerUpdate;
-import com.example.customers.application.port.FieldUpdate;
-import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
+import com.example.customers.application.port.out.dto.CustomerUpdate;
+import com.example.customers.application.port.out.dto.FieldUpdate;
+import com.example.customers.application.port.out.dto.PageRequest;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.genericfield.FieldName;

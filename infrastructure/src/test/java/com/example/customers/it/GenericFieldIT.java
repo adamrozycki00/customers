@@ -3,7 +3,7 @@ package com.example.customers.it;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-import com.example.customers.TestcontainersConfiguration;
+import com.example.customers.infra.config.TestcontainersConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-@Import(TestcontainersConfiguration.class)
+@Import(TestcontainersConfig.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @AutoConfigureRestTestClient
 class GenericFieldIT {
@@ -21,14 +21,14 @@ class GenericFieldIT {
   private static final String GENERIC_FIELDS_COLLECTION = "genericFields";
 
   @Autowired
-  private RestTestClient restTestClient;
+  private RestTestClient client;
 
   @Autowired
-  private MongoTemplate mongoTemplate;
+  private MongoTemplate mongo;
 
   @BeforeEach
   void clearCollection() {
-    mongoTemplate.dropCollection(GENERIC_FIELDS_COLLECTION);
+    mongo.dropCollection(GENERIC_FIELDS_COLLECTION);
   }
 
   @Test
@@ -40,7 +40,7 @@ class GenericFieldIT {
         {"name": "vip", "type": "BOOL"}
         """;
 
-    var resultResponse = restTestClient.post()
+    var resultResponse = client.post()
         .uri("/generic-fields")
         .header("X-Tenant-Id", "flowers")
         .contentType(APPLICATION_JSON)

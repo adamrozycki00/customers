@@ -11,6 +11,7 @@ import com.example.customers.application.port.in.CreateCustomerUseCase;
 import com.example.customers.application.port.in.DeleteCustomerUseCase;
 import com.example.customers.application.port.in.GetCustomerUseCase;
 import com.example.customers.application.port.in.ListCustomersUseCase;
+import com.example.customers.application.service.settings.PagingSettings;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.customer.FirstName;
@@ -32,15 +33,15 @@ import org.junit.jupiter.api.Test;
 
 class CustomerServiceTest {
 
+  private static final PagingSettings PAGING_SETTINGS = new PagingSettings(7, 15);
+
   private final InMemoryCustomerDbAdapter customerRepo = new InMemoryCustomerDbAdapter();
   private final InMemoryGenericFieldDbAdapter genericFieldRepo = new InMemoryGenericFieldDbAdapter();
-
-  private final PagingSettings pagingSettings = new PagingSettings(7, 15);
 
   private final CustomerService underTest = CustomerService.builder()
       .customerPort(customerRepo)
       .genericFieldPort(genericFieldRepo)
-      .pagingSettings(pagingSettings)
+      .pagingSettings(PAGING_SETTINGS)
       .build();
 
   @Nested
@@ -232,7 +233,7 @@ class CustomerServiceTest {
   @Nested
   class ListCustomers {
 
-    private final TenantId tenantId = new TenantId("flowers");
+    private static final TenantId TENANT_ID = new TenantId("flowers");
 
     @Test
     void shouldReturnFirstPageWithDefaultSize() {
@@ -306,7 +307,7 @@ class CustomerServiceTest {
         String rawId = "CUST-%02d".formatted(number);
         var id = new CustomerId(rawId);
         var customer = Customer.builder()
-            .tenantId(tenantId)
+            .tenantId(TENANT_ID)
             .id(id)
             .build();
         customerRepo.insert(customer);

@@ -9,6 +9,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+/**
+ * Aggregate root: a tenant's typed generic field definition, identified by tenant id and name.
+ */
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

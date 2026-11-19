@@ -15,6 +15,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+/**
+ * Aggregate root: a tenant's customer, identified by tenant id and the client-assigned customer id.
+ */
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

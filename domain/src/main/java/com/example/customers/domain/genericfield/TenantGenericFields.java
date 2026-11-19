@@ -16,6 +16,9 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * A tenant's registered generic fields; converts incoming values to their types, rejecting unregistered names.
+ */
 @RequiredArgsConstructor(access = PRIVATE)
 public final class TenantGenericFields {
 

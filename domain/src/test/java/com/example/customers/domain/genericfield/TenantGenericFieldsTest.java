@@ -13,22 +13,23 @@ import org.junit.jupiter.api.Test;
 
 class TenantGenericFieldsTest {
 
-  private final TenantId tenantId = new TenantId("flowers");
-  private final FieldName registeredFieldName = new FieldName("vip");
-  private final GenericField registeredField = GenericField.builder()
-      .tenantId(tenantId)
-      .name(registeredFieldName)
+  private static final TenantId TENANT_ID = new TenantId("flowers");
+  private static final FieldName REGISTERED_FIELD_NAME = new FieldName("vip");
+  private static final GenericField REGISTERED_FIELD = GenericField.builder()
+      .tenantId(TENANT_ID)
+      .name(REGISTERED_FIELD_NAME)
       .type(FieldType.BOOL)
       .build();
-  private final List<GenericField> registeredFields = List.of(registeredField);
-  private final TenantGenericFields tenantGenericFields = TenantGenericFields.of(registeredFields);
+  private static final List<GenericField> REGISTERED_FIELDS = List.of(REGISTERED_FIELD);
+
+  private final TenantGenericFields underTest = TenantGenericFields.of(REGISTERED_FIELDS);
 
   @Test
   void shouldAcceptValueOfRegisteredField() {
     var inputValueOfRegisteredField = Map.of("vip", true);
     var expectedValues = Map.of(new FieldName("vip"), new BooleanValue(true));
 
-    var resultValues = tenantGenericFields.toTypedValues(inputValueOfRegisteredField);
+    var resultValues = underTest.toTypedValues(inputValueOfRegisteredField);
 
     assertThat(resultValues).isEqualTo(expectedValues);
   }
@@ -40,7 +41,7 @@ class TenantGenericFieldsTest {
 
     var thrown = catchThrowableOfType(
         InvalidGenericFieldValuesException.class,
-        () -> tenantGenericFields.toTypedValues(inputValueOfUnknownField));
+        () -> underTest.toTypedValues(inputValueOfUnknownField));
 
     assertThat(thrown)
         .extracting(InvalidGenericFieldValuesException::getInvalidFieldNames)
@@ -54,7 +55,7 @@ class TenantGenericFieldsTest {
 
     var thrown = catchThrowableOfType(
         InvalidGenericFieldValuesException.class,
-        () -> tenantGenericFields.toTypedValues(inputValueOfWrongType));
+        () -> underTest.toTypedValues(inputValueOfWrongType));
 
     assertThat(thrown)
         .extracting(InvalidGenericFieldValuesException::getInvalidFieldNames)
@@ -68,7 +69,7 @@ class TenantGenericFieldsTest {
 
     var thrown = catchThrowableOfType(
         InvalidGenericFieldValuesException.class,
-        () -> tenantGenericFields.toTypedValues(inputValueOfInvalidFieldName));
+        () -> underTest.toTypedValues(inputValueOfInvalidFieldName));
 
     assertThat(thrown)
         .extracting(InvalidGenericFieldValuesException::getInvalidFieldNames)
@@ -82,7 +83,7 @@ class TenantGenericFieldsTest {
 
     var thrown = catchThrowableOfType(
         InvalidGenericFieldValuesException.class,
-        () -> tenantGenericFields.toTypedValues(inputValuesOfSeveralInvalidFields));
+        () -> underTest.toTypedValues(inputValuesOfSeveralInvalidFields));
 
     assertThat(thrown).isNotNull();
     assertThat(thrown.getInvalidFieldNames()).containsExactlyInAnyOrderElementsOf(expectedInvalidFieldNames);
@@ -91,9 +92,9 @@ class TenantGenericFieldsTest {
   @Test
   void shouldReturnRegisteredFieldNames() {
     var inputRegisteredNames = List.of("vip");
-    var expectedFieldNames = Set.of(registeredFieldName);
+    var expectedFieldNames = Set.of(REGISTERED_FIELD_NAME);
 
-    var resultFieldNames = tenantGenericFields.toRegisteredFieldNames(inputRegisteredNames);
+    var resultFieldNames = underTest.toRegisteredFieldNames(inputRegisteredNames);
 
     assertThat(resultFieldNames).isEqualTo(expectedFieldNames);
   }
@@ -105,7 +106,7 @@ class TenantGenericFieldsTest {
 
     var thrown = catchThrowableOfType(
         InvalidGenericFieldValuesException.class,
-        () -> tenantGenericFields.toRegisteredFieldNames(inputUnregisteredNames));
+        () -> underTest.toRegisteredFieldNames(inputUnregisteredNames));
 
     assertThat(thrown).isNotNull();
     assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
@@ -118,7 +119,7 @@ class TenantGenericFieldsTest {
 
     var thrown = catchThrowableOfType(
         InvalidGenericFieldValuesException.class,
-        () -> tenantGenericFields.toRegisteredFieldNames(inputInvalidNames));
+        () -> underTest.toRegisteredFieldNames(inputInvalidNames));
 
     assertThat(thrown).isNotNull();
     assertThat(thrown.getInvalidFieldNames()).isEqualTo(expectedInvalidFieldNames);
