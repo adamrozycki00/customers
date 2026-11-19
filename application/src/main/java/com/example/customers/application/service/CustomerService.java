@@ -13,7 +13,7 @@ import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.TenantGenericFields;
@@ -33,7 +33,7 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
   @Override
   public Customer create(CreateCustomerUseCase.Command command) {
     var tenantId = new TenantId(command.tenantId());
-    var publicId = new PublicId(command.publicId());
+    var id = new CustomerId(command.id());
     var firstName = nonNull(command.firstName()) ? new FirstName(command.firstName()) : null;
     var lastName = nonNull(command.lastName()) ? new LastName(command.lastName()) : null;
 
@@ -43,7 +43,7 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
 
     var newCustomer = Customer.builder()
         .tenantId(tenantId)
-        .publicId(publicId)
+        .id(id)
         .firstName(firstName)
         .lastName(lastName)
         .genericFields(genericFields)
@@ -55,9 +55,9 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
   @Override
   public Customer get(GetCustomerUseCase.Query query) {
     var tenantId = new TenantId(query.tenantId());
-    var publicId = new PublicId(query.publicId());
+    var id = new CustomerId(query.id());
 
-    return customerPort.find(tenantId, publicId).orElseThrow(() -> new NotFoundException("Customer not found"));
+    return customerPort.find(tenantId, id).orElseThrow(() -> new NotFoundException("Customer not found"));
   }
 
   @Override
@@ -74,9 +74,9 @@ public class CustomerService implements CreateCustomerUseCase, GetCustomerUseCas
   @Override
   public void delete(DeleteCustomerUseCase.Command command) {
     var tenantId = new TenantId(command.tenantId());
-    var publicId = new PublicId(command.publicId());
+    var id = new CustomerId(command.id());
 
-    customerPort.delete(tenantId, publicId);
+    customerPort.delete(tenantId, id);
   }
 
   private void validatePageSize(int size) {

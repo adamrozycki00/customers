@@ -23,18 +23,18 @@ public final class Customer {
   @EqualsAndHashCode.Include
   private final TenantId tenantId;
   @EqualsAndHashCode.Include
-  private final PublicId publicId;
+  private final CustomerId id;
   private final FirstName firstName;
   private final LastName lastName;
   private final Map<FieldName, GenericFieldValue> genericFields;
 
   @Builder
-  private Customer(TenantId tenantId, PublicId publicId, FirstName firstName, LastName lastName,
+  private Customer(TenantId tenantId, CustomerId id, FirstName firstName, LastName lastName,
                    Map<FieldName, GenericFieldValue> genericFields) {
-    validate(tenantId, publicId);
+    validate(tenantId, id);
 
     this.tenantId = tenantId;
-    this.publicId = publicId;
+    this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
     this.genericFields = makeImmutable(genericFields);
@@ -49,9 +49,9 @@ public final class Customer {
     return unmodifiableMap(orderedCopy);
   }
 
-  private static void validate(TenantId tenantId, PublicId publicId) {
-    if (isNull(tenantId) || isNull(publicId)) {
-      throw new ValidationException("Customer requires a tenant id and a public id");
+  private static void validate(TenantId tenantId, CustomerId id) {
+    if (isNull(tenantId) || isNull(id)) {
+      throw new ValidationException("Customer requires a tenant id and an id");
     }
   }
 }

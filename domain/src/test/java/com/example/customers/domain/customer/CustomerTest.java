@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 class CustomerTest {
 
   private final TenantId validTenantId = new TenantId("flowers");
-  private final PublicId validPublicId = new PublicId("CUST-1");
+  private final CustomerId validId = new CustomerId("CUST-1");
 
   @Nested
   class Equality {
@@ -25,12 +25,12 @@ class CustomerTest {
       var firstNameAfter = new FirstName("Maria");
       var customerBeforeRename = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(validPublicId)
+          .id(validId)
           .firstName(firstNameBefore)
           .build();
       var customerAfterRename = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(validPublicId)
+          .id(validId)
           .firstName(firstNameAfter)
           .build();
 
@@ -40,15 +40,15 @@ class CustomerTest {
     }
 
     @Test
-    void shouldNotBeEqualWhenPublicIdsDiffer() {
-      var otherPublicId = new PublicId("CUST-2");
+    void shouldNotBeEqualWhenIdsDiffer() {
+      var otherId = new CustomerId("CUST-2");
       var customer = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(validPublicId)
+          .id(validId)
           .build();
       var otherCustomer = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(otherPublicId)
+          .id(otherId)
           .build();
 
       var resultEquality = customer.equals(otherCustomer);
@@ -61,11 +61,11 @@ class CustomerTest {
       var otherTenantId = new TenantId("roses");
       var customer = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(validPublicId)
+          .id(validId)
           .build();
       var otherTenantsCustomer = Customer.builder()
           .tenantId(otherTenantId)
-          .publicId(validPublicId)
+          .id(validId)
           .build();
 
       var resultEquality = customer.equals(otherTenantsCustomer);
@@ -78,12 +78,12 @@ class CustomerTest {
   class ValidCustomers {
 
     @Test
-    void shouldCreateCustomerWithOnlyPublicId() {
-      var inputValidPublicId = new PublicId("CUST-1");
+    void shouldCreateCustomerWithOnlyId() {
+      var inputValidId = new CustomerId("CUST-1");
 
       var resultCustomer = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(inputValidPublicId)
+          .id(inputValidId)
           .build();
 
       assertThat(resultCustomer.getFirstName()).isNull();
@@ -94,7 +94,7 @@ class CustomerTest {
     void shouldHaveEmptyGenericFieldsWhenOmitted() {
       var customerBuilderWithoutGenericFields = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(validPublicId);
+          .id(validId);
 
       var resultCustomer = customerBuilderWithoutGenericFields.build();
 
@@ -107,7 +107,7 @@ class CustomerTest {
 
       var resultCustomer = Customer.builder()
           .tenantId(validTenantId)
-          .publicId(validPublicId)
+          .id(validId)
           .genericFields(inputMissingGenericFields)
           .build();
 
@@ -119,16 +119,16 @@ class CustomerTest {
   class InvalidCustomers {
 
     @Test
-    void shouldRejectMissingPublicId() {
-      PublicId inputMissingPublicId = null;
+    void shouldRejectMissingId() {
+      CustomerId inputMissingId = null;
 
       var thrown = catchThrowable(() -> Customer.builder()
           .tenantId(validTenantId)
-          .publicId(inputMissingPublicId)
+          .id(inputMissingId)
           .build());
 
       assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Customer requires a tenant id and a public id");
+          .hasMessage("Customer requires a tenant id and an id");
     }
 
     @Test
@@ -137,11 +137,11 @@ class CustomerTest {
 
       var thrown = catchThrowable(() -> Customer.builder()
           .tenantId(inputMissingTenantId)
-          .publicId(validPublicId)
+          .id(validId)
           .build());
 
       assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Customer requires a tenant id and a public id");
+          .hasMessage("Customer requires a tenant id and an id");
     }
   }
 }

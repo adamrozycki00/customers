@@ -17,7 +17,7 @@ public interface UpdateCustomerUseCase {
   @Builder
   record Command(
       String tenantId,
-      String publicId,
+      String id,
       Set<String> fieldMask,
       String firstName,
       String lastName,

@@ -6,7 +6,7 @@ import com.example.customers.application.port.FieldUpdate;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.tenant.TenantId;
@@ -28,10 +28,10 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
   }
 
   @Override
-  public Optional<Customer> find(TenantId tenantId, PublicId publicId) {
+  public Optional<Customer> find(TenantId tenantId, CustomerId id) {
     return customers.stream()
         .filter(customer -> customer.getTenantId().equals(tenantId))
-        .filter(customer -> customer.getPublicId().equals(publicId))
+        .filter(customer -> customer.getId().equals(id))
         .findFirst();
   }
 
@@ -55,8 +55,8 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
   }
 
   @Override
-  public Optional<Customer> update(TenantId tenantId, PublicId publicId, CustomerUpdate update) {
-    var storedCustomer = find(tenantId, publicId);
+  public Optional<Customer> update(TenantId tenantId, CustomerId id, CustomerUpdate update) {
+    var storedCustomer = find(tenantId, id);
 
     if (storedCustomer.isEmpty()) {
       return Optional.empty();
@@ -70,7 +70,7 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
     genericFields.keySet().removeAll(update.genericFieldsToClear());
     var updatedCustomer = Customer.builder()
         .tenantId(current.getTenantId())
-        .publicId(current.getPublicId())
+        .id(current.getId())
         .firstName(firstName)
         .lastName(lastName)
         .genericFields(genericFields)
@@ -89,7 +89,7 @@ public class InMemoryCustomerDbAdapter implements CustomerPort {
   }
 
   @Override
-  public void delete(TenantId tenantId, PublicId publicId) {
-    customers.removeIf(customer -> customer.getTenantId().equals(tenantId) && customer.getPublicId().equals(publicId));
+  public void delete(TenantId tenantId, CustomerId id) {
+    customers.removeIf(customer -> customer.getTenantId().equals(tenantId) && customer.getId().equals(id));
   }
 }

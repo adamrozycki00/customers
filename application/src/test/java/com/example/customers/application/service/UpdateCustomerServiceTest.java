@@ -11,7 +11,7 @@ import com.example.customers.application.port.in.UpdateCustomerUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
@@ -34,7 +34,7 @@ class UpdateCustomerServiceTest {
   private final UpdateCustomerService underTest = new UpdateCustomerService(customerRepo, genericFieldRepo);
 
   private final TenantId tenantId = new TenantId("flowers");
-  private final PublicId publicId = new PublicId("CUST-1");
+  private final CustomerId id = new CustomerId("CUST-1");
   private final FirstName storedFirstName = new FirstName("Anna");
   private final LastName storedLastName = new LastName("Smith");
   private final FieldName vipName = new FieldName("vip");
@@ -46,14 +46,14 @@ class UpdateCustomerServiceTest {
     Set<String> firstNameMask = Set.of("firstName");
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(firstNameMask)
         .firstName("Maria")
         .build();
     var expectedFirstName = new FirstName("Maria");
     var expectedCustomer = Customer.builder()
         .tenantId(tenantId)
-        .publicId(publicId)
+        .id(id)
         .firstName(expectedFirstName)
         .lastName(storedLastName)
         .build();
@@ -70,14 +70,14 @@ class UpdateCustomerServiceTest {
     Set<String> lastNameMask = Set.of("lastName");
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(lastNameMask)
         .lastName("Nowak")
         .build();
     var expectedLastName = new LastName("Nowak");
     var expectedCustomer = Customer.builder()
         .tenantId(tenantId)
-        .publicId(publicId)
+        .id(id)
         .firstName(storedFirstName)
         .lastName(expectedLastName)
         .build();
@@ -96,7 +96,7 @@ class UpdateCustomerServiceTest {
     Map<String, Object> inputGenericFields = Map.of("vip", true);
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(vipMask)
         .genericFields(inputGenericFields)
         .build();
@@ -104,7 +104,7 @@ class UpdateCustomerServiceTest {
     Map<FieldName, GenericFieldValue> expectedGenericFields = Map.of(vipName, expectedVipValue);
     var expectedCustomer = Customer.builder()
         .tenantId(tenantId)
-        .publicId(publicId)
+        .id(id)
         .firstName(storedFirstName)
         .lastName(storedLastName)
         .genericFields(expectedGenericFields)
@@ -127,7 +127,7 @@ class UpdateCustomerServiceTest {
     inputGenericFieldsClearingVip.put("vip", null);
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(vipMask)
         .genericFields(inputGenericFieldsClearingVip)
         .build();
@@ -146,7 +146,7 @@ class UpdateCustomerServiceTest {
     Map<String, Object> inputValueOfUnregisteredField = Map.of("vipp", true);
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(unregisteredFieldMask)
         .genericFields(inputValueOfUnregisteredField)
         .build();
@@ -167,7 +167,7 @@ class UpdateCustomerServiceTest {
     inputGenericFieldsClearingUnregisteredField.put("vipp", null);
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(unregisteredFieldMask)
         .genericFields(inputGenericFieldsClearingUnregisteredField)
         .build();
@@ -189,7 +189,7 @@ class UpdateCustomerServiceTest {
     inputSettingAndClearingUnregisteredFields.put("ghost", null);
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(unregisteredFieldsMask)
         .genericFields(inputSettingAndClearingUnregisteredFields)
         .build();
@@ -206,13 +206,13 @@ class UpdateCustomerServiceTest {
     Set<String> missingFieldMask = null;
     var inputCommand = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(missingFieldMask)
         .firstName("Maria")
         .build();
     var expectedCustomer = Customer.builder()
         .tenantId(tenantId)
-        .publicId(publicId)
+        .id(id)
         .firstName(storedFirstName)
         .lastName(storedLastName)
         .build();
@@ -226,7 +226,7 @@ class UpdateCustomerServiceTest {
   void shouldRejectUnknownCustomer() {
     var inputCommandForUnknownCustomer = UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-404")
+        .id("CUST-404")
         .build();
 
     var thrown = catchThrowable(() -> underTest.update(inputCommandForUnknownCustomer));
@@ -252,7 +252,7 @@ class UpdateCustomerServiceTest {
   private void storeCustomer(Map<FieldName, GenericFieldValue> genericFields) {
     var storedCustomer = Customer.builder()
         .tenantId(tenantId)
-        .publicId(publicId)
+        .id(id)
         .firstName(storedFirstName)
         .lastName(storedLastName)
         .genericFields(genericFields)

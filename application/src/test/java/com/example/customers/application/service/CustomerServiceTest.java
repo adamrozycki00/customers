@@ -14,7 +14,7 @@ import com.example.customers.application.port.in.ListCustomersUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.exception.ValidationException;
 import com.example.customers.domain.genericfield.FieldName;
@@ -59,19 +59,19 @@ class CustomerServiceTest {
       Map<String, Object> inputGenericFields = Map.of("vip", true);
       var inputCommand = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .firstName("Anna")
           .lastName("Smith")
           .genericFields(inputGenericFields)
           .build();
-      var expectedPublicId = new PublicId("CUST-1");
+      var expectedId = new CustomerId("CUST-1");
       var expectedFirstName = new FirstName("Anna");
       var expectedLastName = new LastName("Smith");
       var expectedVipValue = new BooleanValue(true);
       Map<FieldName, GenericFieldValue> expectedGenericFields = Map.of(vipName, expectedVipValue);
       var expectedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(expectedPublicId)
+          .id(expectedId)
           .firstName(expectedFirstName)
           .lastName(expectedLastName)
           .genericFields(expectedGenericFields)
@@ -87,17 +87,17 @@ class CustomerServiceTest {
       Map<String, Object> noGenericFields = emptyMap();
       var inputCommand = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .firstName("Anna")
           .lastName("Smith")
           .genericFields(noGenericFields)
           .build();
       var tenantId = new TenantId("flowers");
-      var publicId = new PublicId("CUST-1");
+      var id = new CustomerId("CUST-1");
 
       underTest.create(inputCommand);
 
-      var resultStoredCustomer = customerRepo.find(tenantId, publicId);
+      var resultStoredCustomer = customerRepo.find(tenantId, id);
       assertThat(resultStoredCustomer).isPresent();
     }
 
@@ -106,7 +106,7 @@ class CustomerServiceTest {
       Map<String, Object> noGenericFields = emptyMap();
       var inputCommandWithoutNames = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .genericFields(noGenericFields)
           .build();
 
@@ -121,7 +121,7 @@ class CustomerServiceTest {
       Map<String, Object> inputMissingGenericFields = null;
       var inputCommandWithoutGenericFields = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .genericFields(inputMissingGenericFields)
           .build();
 
@@ -138,11 +138,11 @@ class CustomerServiceTest {
     void shouldReturnExistingCustomer() {
       // given that Anna is stored
       var tenantId = new TenantId("flowers");
-      var publicId = new PublicId("CUST-1");
+      var id = new CustomerId("CUST-1");
       var firstName = new FirstName("Anna");
       var storedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .build();
       customerRepo.insert(storedCustomer);
@@ -171,17 +171,17 @@ class CustomerServiceTest {
     void shouldDeleteCustomer() {
       // given that a customer is stored
       var tenantId = new TenantId("flowers");
-      var publicId = new PublicId("CUST-1");
+      var id = new CustomerId("CUST-1");
       var storedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .build();
       customerRepo.insert(storedCustomer);
       var inputCommand = new DeleteCustomerUseCase.Command("flowers", "CUST-1");
 
       underTest.delete(inputCommand);
 
-      var resultStoredCustomer = customerRepo.find(tenantId, publicId);
+      var resultStoredCustomer = customerRepo.find(tenantId, id);
       assertThat(resultStoredCustomer).isEmpty();
     }
   }
@@ -261,11 +261,11 @@ class CustomerServiceTest {
       List<Customer> storedCustomers = new ArrayList<>();
 
       for (int number = 1; number <= count; number++) {
-        String rawPublicId = "CUST-%02d".formatted(number);
-        var publicId = new PublicId(rawPublicId);
+        String rawId = "CUST-%02d".formatted(number);
+        var id = new CustomerId(rawId);
         var customer = Customer.builder()
             .tenantId(tenantId)
-            .publicId(publicId)
+            .id(id)
             .build();
         customerRepo.insert(customer);
         storedCustomers.add(customer);

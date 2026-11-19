@@ -14,7 +14,7 @@ import com.example.customers.application.port.PageRequest;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
@@ -58,7 +58,7 @@ class MongoCustomerDbAdapterTest {
   private MongoCustomerDbAdapter underTest;
 
   private final TenantId tenantId = new TenantId("flowers");
-  private final PublicId publicId = new PublicId("CUST-1");
+  private final CustomerId id = new CustomerId("CUST-1");
   private final FirstName firstName = new FirstName("Anna");
   private final LastName lastName = new LastName("Smith");
   private final FieldName vipName = new FieldName("vip");
@@ -84,12 +84,12 @@ class MongoCustomerDbAdapterTest {
     void shouldInsertCustomer() {
       var inputCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .lastName(lastName)
           .build();
       var expectedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId)
           .append("firstName", "Anna")
           .append("lastName", "Smith");
@@ -116,7 +116,7 @@ class MongoCustomerDbAdapterTest {
           sinceName, inputDatetime);
       var inputCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .lastName(lastName)
           .genericFields(inputGenericFields)
@@ -138,10 +138,10 @@ class MongoCustomerDbAdapterTest {
     void shouldLeaveOutMissingOptionalFields() {
       var inputCustomerWithoutNames = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .build();
       var expectedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId);
       var expectedJson = expectedDoc.toJson();
 
@@ -152,33 +152,33 @@ class MongoCustomerDbAdapterTest {
     }
 
     @Test
-    void shouldRejectDuplicatePublicId() {
+    void shouldRejectDuplicateId() {
       storeCustomerDoc("flowers", "CUST-1");
-      var inputCustomerWithDuplicatePublicId = Customer.builder()
+      var inputCustomerWithDuplicateId = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .build();
 
-      var thrown = catchThrowable(() -> underTest.insert(inputCustomerWithDuplicatePublicId));
+      var thrown = catchThrowable(() -> underTest.insert(inputCustomerWithDuplicateId));
 
       assertThat(thrown).isInstanceOf(ConflictException.class)
-          .hasMessage("Customer with this public id already exists");
+          .hasMessage("Customer with this id already exists");
     }
 
     @Test
     void shouldRejectInsertingDeletedCustomer() {
       storeDeletedCustomerDoc("flowers", "CUST-1");
-      var inputCustomerReusingPublicId = Customer.builder()
+      var inputCustomerReusingId = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .build();
 
-      var thrown = catchThrowable(() -> underTest.insert(inputCustomerReusingPublicId));
+      var thrown = catchThrowable(() -> underTest.insert(inputCustomerReusingId));
 
       assertThat(thrown).isInstanceOf(ConflictException.class)
-          .hasMessage("Customer with this public id already exists");
+          .hasMessage("Customer with this id already exists");
     }
   }
 
@@ -190,12 +190,12 @@ class MongoCustomerDbAdapterTest {
       storeCustomerDocWithNames();
       var expectedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .lastName(lastName)
           .build();
 
-      var resultCustomer = underTest.find(tenantId, publicId);
+      var resultCustomer = underTest.find(tenantId, id);
 
       assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
     }
@@ -210,7 +210,7 @@ class MongoCustomerDbAdapterTest {
           .append("score", 42L)
           .append("since", storedDate);
       var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var storedDoc = new Document("_id", storedId)
           .append("firstName", "Anna")
           .append("lastName", "Smith")
@@ -226,7 +226,7 @@ class MongoCustomerDbAdapterTest {
           scoreName, expectedInteger,
           sinceName, expectedDatetime);
 
-      var resultCustomer = underTest.find(tenantId, publicId);
+      var resultCustomer = underTest.find(tenantId, id);
 
       assertThat(resultCustomer).get().extracting(Customer::getGenericFields).isEqualTo(expectedGenericFields);
     }
@@ -234,15 +234,15 @@ class MongoCustomerDbAdapterTest {
     @Test
     void shouldFindCustomerWithoutOptionalFields() {
       var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var storedDocWithoutOptionalFields = new Document("_id", storedId);
       mongoTemplate.insert(storedDocWithoutOptionalFields, CUSTOMERS_COLLECTION);
       var expectedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .build();
 
-      var resultCustomer = underTest.find(tenantId, publicId);
+      var resultCustomer = underTest.find(tenantId, id);
 
       assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
     }
@@ -251,20 +251,20 @@ class MongoCustomerDbAdapterTest {
     void shouldNotFindDeletedCustomer() {
       storeDeletedCustomerDoc("flowers", "CUST-1");
 
-      var resultCustomer = underTest.find(tenantId, publicId);
+      var resultCustomer = underTest.find(tenantId, id);
 
       assertThat(resultCustomer).isEmpty();
     }
 
     @Test
     void shouldNotFindCustomerOfOtherTenant() {
-      var storedIdWithSamePublicIdOfOtherTenant = new Document("tenantId", "trees")
-          .append("publicId", publicId.value());
-      var storedDocOfOtherTenant = new Document("_id", storedIdWithSamePublicIdOfOtherTenant)
+      var storedIdWithSameIdOfOtherTenant = new Document("tenantId", "trees")
+          .append("id", id.value());
+      var storedDocOfOtherTenant = new Document("_id", storedIdWithSameIdOfOtherTenant)
           .append("firstName", "Anna");
       mongoTemplate.insert(storedDocOfOtherTenant, CUSTOMERS_COLLECTION);
 
-      var resultCustomer = underTest.find(tenantId, publicId);
+      var resultCustomer = underTest.find(tenantId, id);
 
       assertThat(resultCustomer).isEmpty();
     }
@@ -274,20 +274,20 @@ class MongoCustomerDbAdapterTest {
   class GetPage {
 
     @Test
-    void shouldGetPageOrderedByPublicId() {
+    void shouldGetPageOrderedById() {
       // given three customers stored out of order
       storeCustomerDoc("flowers", "CUST-3");
       storeCustomerDoc("flowers", "CUST-1");
       storeCustomerDoc("flowers", "CUST-2");
       var inputPageRequest = new PageRequest(1, 10);
-      var expectedPublicIds = List.of("CUST-1", "CUST-2", "CUST-3");
+      var expectedIds = List.of("CUST-1", "CUST-2", "CUST-3");
 
       var resultPage = underTest.getPage(tenantId, inputPageRequest);
 
       assertThat(resultPage.customers())
-          .extracting(Customer::getPublicId)
-          .extracting(PublicId::value)
-          .containsExactlyElementsOf(expectedPublicIds);
+          .extracting(Customer::getId)
+          .extracting(CustomerId::value)
+          .containsExactlyElementsOf(expectedIds);
     }
 
     @Test
@@ -299,15 +299,15 @@ class MongoCustomerDbAdapterTest {
       storeCustomerDoc("flowers", "CUST-4");
       storeCustomerDoc("flowers", "CUST-5");
       var inputSecondPageOfTwo = new PageRequest(2, 2);
-      var thirdPublicId = new PublicId("CUST-3");
-      var fourthPublicId = new PublicId("CUST-4");
+      var thirdId = new CustomerId("CUST-3");
+      var fourthId = new CustomerId("CUST-4");
       var expectedThirdCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(thirdPublicId)
+          .id(thirdId)
           .build();
       var expectedFourthCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(fourthPublicId)
+          .id(fourthId)
           .build();
       var expectedCustomers = List.of(expectedThirdCustomer, expectedFourthCustomer);
       var expectedPage = CustomerPage.builder()
@@ -329,15 +329,15 @@ class MongoCustomerDbAdapterTest {
       storeDeletedCustomerDoc("flowers", "CUST-2");
       storeCustomerDoc("flowers", "CUST-3");
       var inputPageRequest = new PageRequest(1, 10);
-      var firstPublicId = new PublicId("CUST-1");
-      var thirdPublicId = new PublicId("CUST-3");
+      var firstId = new CustomerId("CUST-1");
+      var thirdId = new CustomerId("CUST-3");
       var expectedFirstCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(firstPublicId)
+          .id(firstId)
           .build();
       var expectedThirdCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(thirdPublicId)
+          .id(thirdId)
           .build();
       var expectedCustomers = List.of(expectedFirstCustomer, expectedThirdCustomer);
       var expectedPage = CustomerPage.builder()
@@ -359,15 +359,15 @@ class MongoCustomerDbAdapterTest {
       storeCustomerDoc("trees", "CUST-2");
       storeCustomerDoc("flowers", "CUST-3");
       var inputPageRequest = new PageRequest(1, 10);
-      var firstPublicId = new PublicId("CUST-1");
-      var thirdPublicId = new PublicId("CUST-3");
+      var firstId = new CustomerId("CUST-1");
+      var thirdId = new CustomerId("CUST-3");
       var expectedFirstCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(firstPublicId)
+          .id(firstId)
           .build();
       var expectedThirdCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(thirdPublicId)
+          .id(thirdId)
           .build();
       var expectedCustomers = List.of(expectedFirstCustomer, expectedThirdCustomer);
       var expectedPage = CustomerPage.builder()
@@ -418,19 +418,19 @@ class MongoCustomerDbAdapterTest {
           .genericFieldsToClear(noGenericFieldsToClear)
           .build();
       var expectedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId)
           .append("firstName", "Maria")
           .append("lastName", "Nowak");
       var expectedJson = expectedDoc.toJson();
       var expectedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(newFirstName)
           .lastName(newLastName)
           .build();
 
-      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+      var resultCustomer = underTest.update(tenantId, id, inputUpdate);
 
       var storedDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
       assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
@@ -453,19 +453,19 @@ class MongoCustomerDbAdapterTest {
           .genericFieldsToClear(noGenericFieldsToClear)
           .build();
       var expectedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var expectedDoc = new Document("_id", expectedId)
           .append("firstName", "Maria")
           .append("lastName", "Smith");
       var expectedJson = expectedDoc.toJson();
       var expectedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(newFirstName)
           .lastName(lastName)
           .build();
 
-      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+      var resultCustomer = underTest.update(tenantId, id, inputUpdate);
 
       var storedDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
       assertThat(storedDocs).singleElement().extracting(Document::toJson).isEqualTo(expectedJson);
@@ -478,7 +478,7 @@ class MongoCustomerDbAdapterTest {
       var storedGenericFields = new Document("vip", true)
           .append("note", "prefers tulips");
       var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var storedDoc = new Document("_id", storedId)
           .append("genericFields", storedGenericFields);
       mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
@@ -505,7 +505,7 @@ class MongoCustomerDbAdapterTest {
           noteName, expectedString,
           scoreName, inputInteger);
 
-      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+      var resultCustomer = underTest.update(tenantId, id, inputUpdate);
 
       var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
       assertThat(resultStoredDoc).isNotNull();
@@ -519,7 +519,7 @@ class MongoCustomerDbAdapterTest {
       var storedGenericFields = new Document("vip", true)
           .append("note", "prefers tulips");
       var storedId = new Document("tenantId", "flowers")
-          .append("publicId", "CUST-1");
+          .append("id", "CUST-1");
       var storedDoc = new Document("_id", storedId)
           .append("genericFields", storedGenericFields);
       mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
@@ -537,7 +537,7 @@ class MongoCustomerDbAdapterTest {
       var expectedString = new StringValue("prefers tulips");
       var expectedGenericFields = Map.of(noteName, expectedString);
 
-      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+      var resultCustomer = underTest.update(tenantId, id, inputUpdate);
 
       var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
       assertThat(resultStoredDoc).isNotNull();
@@ -562,7 +562,7 @@ class MongoCustomerDbAdapterTest {
           .build();
       var expectedStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
 
-      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+      var resultCustomer = underTest.update(tenantId, id, inputUpdate);
 
       var resultStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
       assertThat(resultCustomer).isEmpty();
@@ -584,7 +584,7 @@ class MongoCustomerDbAdapterTest {
           .genericFieldsToClear(noGenericFieldsToClear)
           .build();
 
-      var resultCustomer = underTest.update(tenantId, publicId, inputUpdate);
+      var resultCustomer = underTest.update(tenantId, id, inputUpdate);
 
       var resultStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
       assertThat(resultCustomer).isEmpty();
@@ -608,12 +608,12 @@ class MongoCustomerDbAdapterTest {
       var expectedStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
       var expectedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .lastName(lastName)
           .build();
 
-      var resultCustomer = underTest.update(tenantId, publicId, inputEmptyUpdate);
+      var resultCustomer = underTest.update(tenantId, id, inputEmptyUpdate);
 
       var resultStoredDocs = mongoTemplate.findAll(Document.class, CUSTOMERS_COLLECTION);
       assertThat(resultCustomer).get().usingRecursiveComparison().isEqualTo(expectedCustomer);
@@ -629,7 +629,7 @@ class MongoCustomerDbAdapterTest {
       storeCustomerDocWithNames();
       var expectedDeletedAt = Date.from(NOW);
 
-      underTest.delete(tenantId, publicId);
+      underTest.delete(tenantId, id);
 
       var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
       assertThat(resultStoredDoc).isNotNull();
@@ -641,7 +641,7 @@ class MongoCustomerDbAdapterTest {
       storeDeletedCustomerDoc("flowers", "CUST-1");
       var expectedDeletedAt = Date.from(EARLIER_DELETED_AT);
 
-      underTest.delete(tenantId, publicId);
+      underTest.delete(tenantId, id);
 
       var resultStoredDoc = mongoTemplate.getCollection(CUSTOMERS_COLLECTION).find().first();
       assertThat(resultStoredDoc).isNotNull();
@@ -673,25 +673,25 @@ class MongoCustomerDbAdapterTest {
         .into(new ArrayList<>());
   }
 
-  private void storeCustomerDoc(String tenantId, String publicId) {
+  private void storeCustomerDoc(String tenantId, String id) {
     var storedId = new Document("tenantId", tenantId)
-        .append("publicId", publicId);
+        .append("id", id);
     var storedDoc = new Document("_id", storedId);
     mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
   }
 
   private void storeCustomerDocWithNames() {
     var storedId = new Document("tenantId", "flowers")
-        .append("publicId", "CUST-1");
+        .append("id", "CUST-1");
     var storedDoc = new Document("_id", storedId)
         .append("firstName", "Anna")
         .append("lastName", "Smith");
     mongoTemplate.insert(storedDoc, CUSTOMERS_COLLECTION);
   }
 
-  private void storeDeletedCustomerDoc(String tenantId, String publicId) {
+  private void storeDeletedCustomerDoc(String tenantId, String id) {
     var storedId = new Document("tenantId", tenantId)
-        .append("publicId", publicId);
+        .append("id", id);
     var storedDate = Date.from(EARLIER_DELETED_AT);
     var storedDeletedDoc = new Document("_id", storedId)
         .append("deletedAt", storedDate);

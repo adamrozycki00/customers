@@ -4,6 +4,6 @@ public interface DeleteCustomerUseCase {
 
   void delete(Command command);
 
-  record Command(String tenantId, String publicId) {
+  record Command(String tenantId, String id) {
   }
 }

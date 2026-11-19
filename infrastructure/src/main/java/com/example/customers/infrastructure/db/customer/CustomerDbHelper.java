@@ -5,7 +5,7 @@ import static com.example.customers.infrastructure.db.customer.CustomerDocMapper
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.GENERIC_FIELDS;
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.ID;
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.LAST_NAME;
-import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.PUBLIC_ID;
+import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.CUSTOMER_ID;
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.TENANT_ID;
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.toBsonValue;
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.toId;
@@ -24,7 +24,7 @@ import com.example.customers.application.port.CustomerUpdate;
 import com.example.customers.application.port.FieldUpdate;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.tenant.TenantId;
 import java.util.ArrayList;
@@ -86,9 +86,9 @@ final class CustomerDbHelper {
     }
   }
 
-  static Bson toActiveCustomerFilter(TenantId tenantId, PublicId publicId) {
-    var id = toId(tenantId, publicId);
-    var idFilter = eq(ID, id);
+  static Bson toActiveCustomerFilter(TenantId tenantId, CustomerId id) {
+    var idDoc = toId(tenantId, id);
+    var idFilter = eq(ID, idDoc);
     return and(idFilter, NOT_DELETED_FILTER);
   }
 
@@ -99,12 +99,12 @@ final class CustomerDbHelper {
 
   private static Bson toTenantIdRangeFilter(TenantId tenantId) {
     var rawTenantId = tenantId.value();
-    var lowestPublicId = new MinKey();
-    var highestPublicId = new MaxKey();
+    var lowestId = new MinKey();
+    var highestId = new MaxKey();
     var firstIdOfTenant = new Document(TENANT_ID, rawTenantId)
-        .append(PUBLIC_ID, lowestPublicId);
+        .append(CUSTOMER_ID, lowestId);
     var lastIdOfTenant = new Document(TENANT_ID, rawTenantId)
-        .append(PUBLIC_ID, highestPublicId);
+        .append(CUSTOMER_ID, highestId);
     var fromFirstIdOfTenantFilter = gte(ID, firstIdOfTenant);
     var toLastIdOfTenantFilter = lte(ID, lastIdOfTenant);
     return and(fromFirstIdOfTenantFilter, toLastIdOfTenantFilter);

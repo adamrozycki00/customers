@@ -23,7 +23,7 @@ import com.example.customers.application.port.in.UpdateCustomerUseCase;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
@@ -67,7 +67,7 @@ class CustomerControllerTest {
   private DeleteCustomerUseCase deleteCustomerUseCase;
 
   private final TenantId tenantId = new TenantId("flowers");
-  private final PublicId publicId = new PublicId("CUST-1");
+  private final CustomerId id = new CustomerId("CUST-1");
   private final FirstName firstName = new FirstName("Anna");
   private final LastName lastName = new LastName("Smith");
   private final FieldName vipName = new FieldName("vip");
@@ -86,7 +86,7 @@ class CustomerControllerTest {
           "since", "2024-03-01T10:00:00Z");
       var expectedCommand = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .firstName("Anna")
           .lastName("Smith")
           .genericFields(expectedRawGenericFields)
@@ -101,7 +101,7 @@ class CustomerControllerTest {
           sinceName, storedDatetime);
       var createdCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .lastName(lastName)
           .genericFields(storedGenericFields)
@@ -109,7 +109,7 @@ class CustomerControllerTest {
       given(createCustomerUseCase.create(expectedCommand)).willReturn(createdCustomer);
       String inputRequest = """
           {
-            "public_id": "CUST-1",
+            "id": "CUST-1",
             "first_name": "Anna",
             "last_name": "Smith",
             "generic_fields": {"vip": true, "score": 42, "since": "2024-03-01T10:00:00Z"}
@@ -117,7 +117,7 @@ class CustomerControllerTest {
           """;
       String expectedResponse = """
           {
-            "public_id": "CUST-1",
+            "id": "CUST-1",
             "first_name": "Anna",
             "last_name": "Smith",
             "generic_fields": {"vip": true, "score": 42, "since": "2024-03-01T10:00:00Z"}
@@ -141,19 +141,19 @@ class CustomerControllerTest {
       Map<String, Object> noRawGenericFields = emptyMap();
       var expectedCommand = CreateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .genericFields(noRawGenericFields)
           .build();
       var createdCustomerWithoutNames = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .build();
       given(createCustomerUseCase.create(expectedCommand)).willReturn(createdCustomerWithoutNames);
       String inputRequest = """
-          {"public_id": "CUST-1"}
+          {"id": "CUST-1"}
           """;
       String expectedResponse = """
-          {"public_id": "CUST-1", "generic_fields": {}}
+          {"id": "CUST-1", "generic_fields": {}}
           """;
 
       var resultResponse = mockMvc.post()
@@ -179,7 +179,7 @@ class CustomerControllerTest {
       Map<FieldName, GenericFieldValue> storedGenericFields = Map.of(vipName, storedBoolean);
       var storedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .lastName(lastName)
           .genericFields(storedGenericFields)
@@ -187,7 +187,7 @@ class CustomerControllerTest {
       given(getCustomerUseCase.get(expectedQuery)).willReturn(storedCustomer);
       String expectedResponse = """
           {
-            "public_id": "CUST-1",
+            "id": "CUST-1",
             "first_name": "Anna",
             "last_name": "Smith",
             "generic_fields": {"vip": true}
@@ -237,15 +237,15 @@ class CustomerControllerTest {
           .page(2)
           .size(5)
           .build();
-      var sixthPublicId = new PublicId("CUST-6");
-      var seventhPublicId = new PublicId("CUST-7");
+      var sixthId = new CustomerId("CUST-6");
+      var seventhId = new CustomerId("CUST-7");
       var sixthCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(sixthPublicId)
+          .id(sixthId)
           .build();
       var seventhCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(seventhPublicId)
+          .id(seventhId)
           .build();
       var storedCustomers = List.of(sixthCustomer, seventhCustomer);
       var storedPage = CustomerPage.builder()
@@ -258,8 +258,8 @@ class CustomerControllerTest {
       String expectedResponse = """
           {
             "customers": [
-              {"public_id": "CUST-6", "generic_fields": {}},
-              {"public_id": "CUST-7", "generic_fields": {}}
+              {"id": "CUST-6", "generic_fields": {}},
+              {"id": "CUST-7", "generic_fields": {}}
             ],
             "page": 2,
             "size": 5,
@@ -316,7 +316,7 @@ class CustomerControllerTest {
       expectedRawGenericFields.put("score", null);
       var expectedCommand = UpdateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .fieldMask(expectedFieldMask)
           .firstName("Maria")
           .lastName("Nowak")
@@ -328,7 +328,7 @@ class CustomerControllerTest {
       Map<FieldName, GenericFieldValue> updatedGenericFields = Map.of(vipName, updatedBoolean);
       var updatedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(updatedFirstName)
           .lastName(updatedLastName)
           .genericFields(updatedGenericFields)
@@ -343,7 +343,7 @@ class CustomerControllerTest {
           """;
       String expectedResponse = """
           {
-            "public_id": "CUST-1",
+            "id": "CUST-1",
             "first_name": "Maria",
             "last_name": "Nowak",
             "generic_fields": {"vip": false}
@@ -368,7 +368,7 @@ class CustomerControllerTest {
       Map<String, Object> expectedRawGenericFields = Map.of("vip", true);
       var expectedCommand = UpdateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .fieldMask(expectedFieldMask)
           .genericFields(expectedRawGenericFields)
           .build();
@@ -376,7 +376,7 @@ class CustomerControllerTest {
       Map<FieldName, GenericFieldValue> updatedGenericFields = Map.of(vipName, updatedBoolean);
       var updatedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .lastName(lastName)
           .genericFields(updatedGenericFields)
@@ -387,7 +387,7 @@ class CustomerControllerTest {
           """;
       String expectedResponse = """
           {
-            "public_id": "CUST-1",
+            "id": "CUST-1",
             "first_name": "Anna",
             "last_name": "Smith",
             "generic_fields": {"vip": true}
@@ -411,12 +411,12 @@ class CustomerControllerTest {
       Set<String> expectedEmptyFieldMask = emptySet();
       var expectedCommand = UpdateCustomerUseCase.Command.builder()
           .tenantId("flowers")
-          .publicId("CUST-1")
+          .id("CUST-1")
           .fieldMask(expectedEmptyFieldMask)
           .build();
       var unchangedCustomer = Customer.builder()
           .tenantId(tenantId)
-          .publicId(publicId)
+          .id(id)
           .firstName(firstName)
           .build();
       given(updateCustomerUseCase.update(expectedCommand)).willReturn(unchangedCustomer);
@@ -424,7 +424,7 @@ class CustomerControllerTest {
           {"generic_fields": null}
           """;
       String expectedResponse = """
-          {"public_id": "CUST-1", "first_name": "Anna", "generic_fields": {}}
+          {"id": "CUST-1", "first_name": "Anna", "generic_fields": {}}
           """;
 
       var resultResponse = mockMvc.patch()

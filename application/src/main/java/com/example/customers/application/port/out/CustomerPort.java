@@ -4,7 +4,7 @@ import com.example.customers.application.port.CustomerPage;
 import com.example.customers.application.port.CustomerUpdate;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.domain.customer.Customer;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.tenant.TenantId;
 
 import java.util.Optional;
@@ -13,11 +13,11 @@ public interface CustomerPort {
 
   Customer insert(Customer customer);
 
-  Optional<Customer> find(TenantId tenantId, PublicId publicId);
+  Optional<Customer> find(TenantId tenantId, CustomerId id);
 
   CustomerPage getPage(TenantId tenantId, PageRequest pageRequest);
 
-  Optional<Customer> update(TenantId tenantId, PublicId publicId, CustomerUpdate update);
+  Optional<Customer> update(TenantId tenantId, CustomerId id, CustomerUpdate update);
 
-  void delete(TenantId tenantId, PublicId publicId);
+  void delete(TenantId tenantId, CustomerId id);
 }

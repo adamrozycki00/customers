@@ -42,7 +42,7 @@ class CustomerIT {
     registerGenericField("since", "DATETIME");
     String inputCreateRequest = """
         {
-          "public_id": "CUST-1",
+          "id": "CUST-1",
           "first_name": "Anna",
           "generic_fields": {"vip": true, "score": 42, "since": "1990-05-20T00:00:00+02:00"}
         }
@@ -56,7 +56,7 @@ class CustomerIT {
         .expectStatus().isCreated();
     String expectedResponse = """
         {
-          "public_id": "CUST-1",
+          "id": "CUST-1",
           "first_name": "Anna",
           "generic_fields": {"vip": true, "score": 42, "since": "1990-05-19T22:00:00Z"}
         }

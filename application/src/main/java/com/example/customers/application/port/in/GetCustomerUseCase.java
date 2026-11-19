@@ -6,6 +6,6 @@ public interface GetCustomerUseCase {
 
   Customer get(Query query);
 
-  record Query(String tenantId, String publicId) {
+  record Query(String tenantId, String id) {
   }
 }

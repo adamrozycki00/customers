@@ -32,8 +32,8 @@ public class CustomerController implements CustomerApi {
   }
 
   @Override
-  public CustomerResponse getCustomer(String xTenantId, String publicId) {
-    var query = new GetCustomerUseCase.Query(xTenantId, publicId);
+  public CustomerResponse getCustomer(String xTenantId, String id) {
+    var query = new GetCustomerUseCase.Query(xTenantId, id);
     var customer = getCustomerUseCase.get(query);
     return mapper.toResponse(customer);
   }
@@ -50,15 +50,15 @@ public class CustomerController implements CustomerApi {
   }
 
   @Override
-  public CustomerResponse updateCustomer(String xTenantId, String publicId, CustomerPatchRequest request) {
-    var command = mapper.toUpdateCommand(xTenantId, publicId, request);
+  public CustomerResponse updateCustomer(String xTenantId, String id, CustomerPatchRequest request) {
+    var command = mapper.toUpdateCommand(xTenantId, id, request);
     var updatedCustomer = updateCustomerUseCase.update(command);
     return mapper.toResponse(updatedCustomer);
   }
 
   @Override
-  public void deleteCustomer(String xTenantId, String publicId) {
-    var command = new DeleteCustomerUseCase.Command(xTenantId, publicId);
+  public void deleteCustomer(String xTenantId, String id) {
+    var command = new DeleteCustomerUseCase.Command(xTenantId, id);
     deleteCustomerUseCase.delete(command);
   }
 }

@@ -35,11 +35,11 @@ public interface CustomerRestMapper {
   CreateCustomerUseCase.Command toCreateCommand(String tenantId, CreateCustomerRequest request);
 
   @Mapping(target = "tenantId", source = "tenantId")
-  @Mapping(target = "publicId", source = "publicId")
+  @Mapping(target = "id", source = "id")
   @Mapping(target = "fieldMask", source = "request", qualifiedByName = "toFieldMask")
-  UpdateCustomerUseCase.Command toUpdateCommand(String tenantId, String publicId, CustomerPatchRequest request);
+  UpdateCustomerUseCase.Command toUpdateCommand(String tenantId, String id, CustomerPatchRequest request);
 
-  @Mapping(target = "publicId", source = "publicId.value")
+  @Mapping(target = "id", source = "id.value")
   @Mapping(target = "firstName", source = "firstName.value")
   @Mapping(target = "lastName", source = "lastName.value")
   @Mapping(target = "genericFields", source = "genericFields", qualifiedByName = "toRawGenericFields")

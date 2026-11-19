@@ -18,7 +18,7 @@ import com.example.customers.application.port.out.GenericFieldPort;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.NotFoundException;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.TenantGenericFields;
@@ -42,14 +42,14 @@ public class UpdateCustomerService implements UpdateCustomerUseCase {
   @Override
   public Customer update(UpdateCustomerUseCase.Command command) {
     var tenantId = new TenantId(command.tenantId());
-    var publicId = new PublicId(command.publicId());
+    var id = new CustomerId(command.id());
     var registeredFields = genericFieldPort.findAllByTenant(tenantId);
     var tenantGenericFields = TenantGenericFields.of(registeredFields);
     var rawGenericFieldsToUpdate = getRawGenericFieldsToUpdate(command);
     var genericFieldsToUpdate = buildGenericFieldsToUpdate(tenantGenericFields, rawGenericFieldsToUpdate);
     var customerUpdate = buildCustomerUpdate(command, genericFieldsToUpdate);
 
-    return customerPort.update(tenantId, publicId, customerUpdate)
+    return customerPort.update(tenantId, id, customerUpdate)
         .orElseThrow(() -> new NotFoundException("Customer not found"));
   }
 

@@ -29,7 +29,7 @@ curl -X POST localhost:8080/generic-fields -H 'X-Tenant-Id: flowers' -H 'Content
 
 # Create a customer with a value for it
 curl -X POST localhost:8080/customers -H 'X-Tenant-Id: flowers' -H 'Content-Type: application/json' \
-  -d '{"public_id": "CUST-1", "first_name": "Anna", "generic_fields": {"vip": true}}'
+  -d '{"id": "CUST-1", "first_name": "Anna", "generic_fields": {"vip": true}}'
 
 # Read it back
 curl localhost:8080/customers/CUST-1 -H 'X-Tenant-Id: flowers'
@@ -45,16 +45,16 @@ Every request must carry the `X-Tenant-Id` header.
 | --- | --- | --- |
 | `POST` | `/generic-fields` | Register a generic field `{name, type}` |
 | `POST` | `/customers` | Create a customer |
-| `GET` | `/customers/{publicId}` | Read a customer |
+| `GET` | `/customers/{id}` | Read a customer |
 | `GET` | `/customers?page=&size=` | List the tenant's customers |
-| `PATCH` | `/customers/{publicId}` | Partially update a customer |
-| `DELETE` | `/customers/{publicId}` | Delete a customer |
+| `PATCH` | `/customers/{id}` | Partially update a customer |
+| `DELETE` | `/customers/{id}` | Delete a customer |
 
 Example customer payload:
 
 ```json
 {
-  "public_id": "C-1",
+  "id": "C-1",
   "first_name": "Ann",
   "generic_fields": {
     "vip": true,
@@ -72,7 +72,7 @@ Errors are returned as RFC 9457 Problem Details (`application/problem+json`).
 
 1. MongoDB is used as a DB technology. Two reasons: flexible customer schema, straightforward atomic partial update.
 2. Field names are case-sensitive, because tenants author these names and expect them preserved verbatim. They are limited to `[A-Za-z][A-Za-z0-9_]*` characters and at most 64 characters, so the example "date of birth" is registered as e.g. `date_of_birth`.
-3. Customer index `_id` in the DB is composed of the `tenantId` and `publicId` fields, always in that key order. The public id is unique per tenant, case-sensitive (`CUST-1` and `cust-1` are different customers), limited to `[A-Za-z0-9_-]` characters and at most 128 characters, and permanent (not reusable after deletion).
+3. Customer index `_id` in the DB is composed of the `tenantId` and `id` fields, always in that key order. The customer id is unique per tenant, case-sensitive (`CUST-1` and `cust-1` are different customers), limited to `[A-Za-z0-9_-]` characters and at most 128 characters, and permanent (not reusable after deletion).
 4. Generic field values are stored in a nested `genericFields` sub-document (left out when a customer is created without any; after the last value is cleared by PATCH, an empty sub-document may remain, which reads the same as a missing one), so tenant-defined names can never collide with the customer's own fields. All generic field values are optional.
 5. For concurrency and backward-compatibility reasons, once a field definition is registered, it cannot be modified (renamed, retyped, or deleted). Each field definition is its own document with `_id` composed of `tenantId` and `name` (in that key order), so a duplicate name is rejected by the DB with 409.
 6. Supported field types are boolean, string, integer and ISO-8601 datetime. Integers are 64-bit. String values are at most 1024 characters, and first and last names at most 256. A name, when present, must not be empty or blank; to have no name, the field is left out when the customer is created. Once a name is set, it cannot be removed, only replaced. Leading and trailing whitespace is removed from names; whitespace inside a name is kept.
@@ -84,11 +84,11 @@ Errors are returned as RFC 9457 Problem Details (`application/problem+json`).
 ### API behaviour
 
 9. Tenant ID is passed in the `X-Tenant-Id` header rather than as part of the path, as there is no requirement that tenants are RESTful resources. A missing or blank header is rejected with 400. The header is trusted, because authorization is out of scope.
-10. Different HTTP methods are used for customer creation (POST) and updating (PATCH), in order to take advantage of unique inserts in Mongo. A duplicate public id gets 409.
-11. PATCH (`application/json`) changes only what the request mentions. Only generic field values can be cleared; names can only be replaced or kept, and the public id cannot be changed. `first_name` and `last_name` are replaced when present and kept when absent or `null`. Inside `generic_fields`, a value sets the field, `null` clears it, and an absent key keeps it; `generic_fields` itself absent or `null` keeps all generic fields. Request bodies are strict: an unknown property (including `public_id` in a PATCH) is rejected with 400.
+10. Different HTTP methods are used for customer creation (POST) and updating (PATCH), in order to take advantage of unique inserts in Mongo. A duplicate id gets 409.
+11. PATCH (`application/json`) changes only what the request mentions. Only generic field values can be cleared; names can only be replaced or kept, and the id cannot be changed. `first_name` and `last_name` are replaced when present and kept when absent or `null`. Inside `generic_fields`, a value sets the field, `null` clears it, and an absent key keeps it; `generic_fields` itself absent or `null` keeps all generic fields. Request bodies are strict: an unknown property (including `id` in a PATCH) is rejected with 400.
 12. A generic field value whose name is not registered for the tenant, or whose type does not match, is rejected with 400. Nothing is dropped silently.
-13. The regular delete semantics for customers is soft deletion (a `deletedAt` timestamp, set on the first deletion only), for better traceability. GDPR-related hard deletion should be handled independently of the regular delete use case. POST requests with a soft-deleted public id get 409. GET and PATCH on a soft-deleted customer get 404, and soft-deleted customers are excluded from listings. DELETE is idempotent and always returns 204, including for a customer that never existed.
-14. Listing uses offset pagination with 1-based page numbers (`page` default 1, `size` default 20, max 100), ordered by public id. The default and maximum page sizes are configurable in `application.yaml` (`customers.paging.default-page-size`, `customers.paging.max-page-size`).
+13. The regular delete semantics for customers is soft deletion (a `deletedAt` timestamp, set on the first deletion only), for better traceability. GDPR-related hard deletion should be handled independently of the regular delete use case. POST requests with a soft-deleted id get 409. GET and PATCH on a soft-deleted customer get 404, and soft-deleted customers are excluded from listings. DELETE is idempotent and always returns 204, including for a customer that never existed.
+14. Listing uses offset pagination with 1-based page numbers (`page` default 1, `size` default 20, max 100), ordered by id. The default and maximum page sizes are configurable in `application.yaml` (`customers.paging.default-page-size`, `customers.paging.max-page-size`).
 
 ### Concurrency
 

@@ -10,13 +10,13 @@ import org.junit.jupiter.api.Test;
 class UpdateCustomerCommandTest {
 
   @Test
-  void shouldRejectPublicIdInFieldMask() {
-    Set<String> inputFieldMaskWithPublicId = Set.of("publicId");
+  void shouldRejectIdInFieldMask() {
+    Set<String> inputFieldMaskWithId = Set.of("id");
 
     var thrown = catchThrowable(() -> UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
-        .fieldMask(inputFieldMaskWithPublicId)
+        .id("CUST-1")
+        .fieldMask(inputFieldMaskWithId)
         .build());
 
     assertThat(thrown).isInstanceOf(ValidationException.class)
@@ -29,7 +29,7 @@ class UpdateCustomerCommandTest {
 
     var thrown = catchThrowable(() -> UpdateCustomerUseCase.Command.builder()
         .tenantId("flowers")
-        .publicId("CUST-1")
+        .id("CUST-1")
         .fieldMask(inputFieldMaskWithUnknownPath)
         .build());
 

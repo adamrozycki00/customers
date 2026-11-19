@@ -18,7 +18,7 @@ import com.example.customers.application.port.CustomerUpdate;
 import com.example.customers.application.port.PageRequest;
 import com.example.customers.application.port.out.CustomerPort;
 import com.example.customers.domain.customer.Customer;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.exception.ConflictException;
 import com.example.customers.domain.tenant.TenantId;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -47,15 +47,15 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     try {
       mongoTemplate.insert(doc, COLLECTION);
     } catch (DuplicateKeyException e) {
-      throw new ConflictException("Customer with this public id already exists");
+      throw new ConflictException("Customer with this id already exists");
     }
 
     return customer;
   }
 
   @Override
-  public Optional<Customer> find(TenantId tenantId, PublicId publicId) {
-    var activeCustomerFilter = toActiveCustomerFilter(tenantId, publicId);
+  public Optional<Customer> find(TenantId tenantId, CustomerId id) {
+    var activeCustomerFilter = toActiveCustomerFilter(tenantId, id);
     var doc = mongoTemplate.getCollection(COLLECTION)
         .find(activeCustomerFilter)
         .first();
@@ -74,12 +74,12 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     var size = pageRequest.size();
     var customersOfEarlierPages = (page - 1) * size;
     var activeCustomersOfTenantFilter = toActiveCustomersOfTenantFilter(tenantId);
-    var byPublicId = ascending(ID);
+    var byId = ascending(ID);
     var collection = mongoTemplate.getCollection(COLLECTION);
     var customers = new ArrayList<Customer>();
 
     collection.find(activeCustomersOfTenantFilter)
-        .sort(byPublicId)
+        .sort(byId)
         .skip(customersOfEarlierPages)
         .limit(size)
         .map(CustomerDocMapper::toDomain)
@@ -96,12 +96,12 @@ public class MongoCustomerDbAdapter implements CustomerPort {
   }
 
   @Override
-  public Optional<Customer> update(TenantId tenantId, PublicId publicId, CustomerUpdate update) {
+  public Optional<Customer> update(TenantId tenantId, CustomerId id, CustomerUpdate update) {
     if (hasNoUpdates(update)) {
-      return find(tenantId, publicId);
+      return find(tenantId, id);
     }
 
-    var activeCustomerFilter = toActiveCustomerFilter(tenantId, publicId);
+    var activeCustomerFilter = toActiveCustomerFilter(tenantId, id);
     var updates = toUpdateBson(update);
     var returnUpdatedDoc = new FindOneAndUpdateOptions().returnDocument(AFTER);
     var doc = mongoTemplate.getCollection(COLLECTION)
@@ -116,8 +116,8 @@ public class MongoCustomerDbAdapter implements CustomerPort {
   }
 
   @Override
-  public void delete(TenantId tenantId, PublicId publicId) {
-    var activeCustomerFilter = toActiveCustomerFilter(tenantId, publicId);
+  public void delete(TenantId tenantId, CustomerId id) {
+    var activeCustomerFilter = toActiveCustomerFilter(tenantId, id);
     var now = clock.instant();
     var deletedAt = Date.from(now);
     var setDeletedAt = set(DELETED_AT, deletedAt);

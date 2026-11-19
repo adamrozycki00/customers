@@ -7,7 +7,7 @@ import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import com.example.customers.domain.customer.Customer;
 import com.example.customers.domain.customer.FirstName;
 import com.example.customers.domain.customer.LastName;
-import com.example.customers.domain.customer.PublicId;
+import com.example.customers.domain.customer.CustomerId;
 import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.value.BooleanValue;
 import com.example.customers.domain.genericfield.value.DatetimeValue;
@@ -26,32 +26,32 @@ final class CustomerDocMapper {
 
   static final String ID = "_id";
   static final String TENANT_ID = "tenantId";
-  static final String PUBLIC_ID = "publicId";
+  static final String CUSTOMER_ID = "id";
   static final String FIRST_NAME = "firstName";
   static final String LAST_NAME = "lastName";
   static final String GENERIC_FIELDS = "genericFields";
   static final String DELETED_AT = "deletedAt";
 
-  static Document toId(TenantId tenantId, PublicId publicId) {
+  static Document toId(TenantId tenantId, CustomerId id) {
     return new Document(TENANT_ID, tenantId.value())
-        .append(PUBLIC_ID, publicId.value());
+        .append(CUSTOMER_ID, id.value());
   }
 
   static Customer toDomain(Document doc) {
-    var id = doc.get(ID, Document.class);
-    var rawTenantId = id.getString(TENANT_ID);
-    var rawPublicId = id.getString(PUBLIC_ID);
+    var idDoc = doc.get(ID, Document.class);
+    var rawTenantId = idDoc.getString(TENANT_ID);
+    var rawId = idDoc.getString(CUSTOMER_ID);
     var rawFirstName = doc.getString(FIRST_NAME);
     var rawLastName = doc.getString(LAST_NAME);
     var genericFieldsDoc = doc.get(GENERIC_FIELDS, Document.class);
     var tenantId = new TenantId(rawTenantId);
-    var publicId = new PublicId(rawPublicId);
+    var id = new CustomerId(rawId);
     var firstName = nonNull(rawFirstName) ? new FirstName(rawFirstName) : null;
     var lastName = nonNull(rawLastName) ? new LastName(rawLastName) : null;
     var genericFields = toGenericFields(genericFieldsDoc);
     return Customer.builder()
         .tenantId(tenantId)
-        .publicId(publicId)
+        .id(id)
         .firstName(firstName)
         .lastName(lastName)
         .genericFields(genericFields)
@@ -89,12 +89,12 @@ final class CustomerDocMapper {
 
   static Document toDoc(Customer customer) {
     var tenantId = customer.getTenantId();
-    var publicId = customer.getPublicId();
+    var id = customer.getId();
     var firstName = customer.getFirstName();
     var lastName = customer.getLastName();
     var genericFields = customer.getGenericFields();
-    var id = toId(tenantId, publicId);
-    var doc = new Document(ID, id);
+    var idDoc = toId(tenantId, id);
+    var doc = new Document(ID, idDoc);
 
     if (nonNull(firstName)) {
       doc.append(FIRST_NAME, firstName.value());

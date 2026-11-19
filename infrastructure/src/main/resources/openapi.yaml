@@ -93,7 +93,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /customers/{public_id}:
+  /customers/{id}:
     get:
       tags:
         - Customer
@@ -101,7 +101,7 @@ paths:
       summary: Read a customer of the tenant
       parameters:
         - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/PublicId'
+        - $ref: '#/components/parameters/CustomerId'
       responses:
         '200':
           description: The customer.
@@ -124,10 +124,10 @@ paths:
       description: >
         Changes only what the request mentions. Names are replaced when present and kept when left out or null;
         they cannot be cleared. Inside generic_fields, a value sets the field, null clears it, and a missing key
-        keeps it. The public id cannot be changed.
+        keeps it. The id cannot be changed.
       parameters:
         - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/PublicId'
+        - $ref: '#/components/parameters/CustomerId'
       requestBody:
         required: true
         content:
@@ -156,7 +156,7 @@ paths:
       description: Idempotent; deleting a customer that does not exist or is already deleted also returns 204.
       parameters:
         - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/PublicId'
+        - $ref: '#/components/parameters/CustomerId'
       responses:
         '204':
           description: The customer is deleted (or did not exist).
@@ -174,11 +174,11 @@ components:
       description: The tenant the request acts for. Alphanumeric, `_` or `-`, at most 64 characters.
       schema:
         type: string
-    PublicId:
-      name: public_id
+    CustomerId:
+      name: id
       in: path
       required: true
-      description: The customer's public id.
+      description: The customer's id.
       schema:
         type: string
 
@@ -271,9 +271,9 @@ components:
       type: object
       additionalProperties: false
       required:
-        - public_id
+        - id
       properties:
-        public_id:
+        id:
           type: string
           description: Unique per tenant and permanent; letters, digits, `_` or `-`; at most 128 characters.
           example: CUST-1
@@ -297,10 +297,10 @@ components:
     CustomerResponse:
       type: object
       required:
-        - public_id
+        - id
         - generic_fields
       properties:
-        public_id:
+        id:
           type: string
           example: CUST-1
         first_name:
