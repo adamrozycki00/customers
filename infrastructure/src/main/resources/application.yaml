@@ -31,3 +31,8 @@ management:
       probes:
         enabled: true
       show-components: always
+
+logging:
+  level:
+    # Mongo health already reports DOWN; skip its WARN with a full stack trace on every probe during an outage
+    org.springframework.boot.mongodb.health: ERROR

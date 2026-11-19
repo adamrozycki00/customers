@@ -53,7 +53,7 @@ class RestExceptionHandler {
 
   @ExceptionHandler({DataAccessResourceFailureException.class, TransientDataAccessException.class})
   ProblemDetail handleDatabaseUnavailable(DataAccessException exception, HttpServletResponse response) {
-    log.warn(DATABASE_UNAVAILABLE, exception);
+    log.warn("{}: {}", DATABASE_UNAVAILABLE, exception.getMessage());
     response.setHeader(RETRY_AFTER, RETRY_AFTER_SECONDS);
     return ProblemDetail.forStatusAndDetail(SERVICE_UNAVAILABLE, DATABASE_UNAVAILABLE);
   }

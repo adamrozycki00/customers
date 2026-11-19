@@ -107,6 +107,12 @@ Errors are returned as RFC 9457 Problem Details (`application/problem+json`).
 22. The application starts without MongoDB. While the database is down, requests get 503, and the cache fills once the database is back.
 23. Monitoring uses Spring Boot Actuator on the application port: `/actuator/health` (with a MongoDB component), `/actuator/health/liveness`, `/actuator/health/readiness`, `/actuator/info` and `/actuator/metrics` (including MongoDB command and connection-pool metrics, and the generic field cache as `cache.*` with `cache=genericFields`). Readiness does not depend on MongoDB, so a database outage shows up as 503 responses rather than as the instance being taken out of the load balancer. The endpoints are not secured (authorization is out of scope), so they must not be exposed publicly.
 
+### Logging
+
+24. Each API request gets one INFO line: method, path with query string, the `X-Tenant-Id` header as sent, status and duration (e.g. `GET /customers/C-1 tenant=flowers -> 404 (2 ms)`). `/actuator/**` requests are not logged. Request and response bodies are never logged, so customer names and generic field values never appear in the logs; customer ids appear only as part of the path.
+25. The generic field cache logs at INFO when it is refreshed (number of fields and tenants, duration), when a tenant's fields are loaded from the DB, and when a field is registered. A failed refresh is a one-line WARN when the DB is unavailable (the cache keeps its entries), and an ERROR with a stack trace for anything else, such as corrupt data.
+26. A 503 (DB unavailable) is logged as one WARN line with the cause, without a stack trace; any other unexpected error is logged at ERROR with a stack trace. Client errors (400, 404, 409) appear only in the request line. During a DB outage, Spring Boot's MongoDB health check would log a full stack trace on every health probe, so its logger is set to ERROR (`application.yaml`); health still reports `mongo: DOWN`, and the MongoDB driver logs once when it cannot connect. To see every MongoDB command, start the application with `--logging.level.org.mongodb.driver.protocol.command=DEBUG`.
+
 ### Structure
 
-24. The code follows Domain-Driven Design and is split into three Maven modules: `domain` (no framework dependencies), `application` (use cases) and `infrastructure` (MongoDB and REST adapters).
+27. The code follows Domain-Driven Design and is split into three Maven modules: `domain` (no framework dependencies), `application` (use cases) and `infrastructure` (MongoDB and REST adapters).
