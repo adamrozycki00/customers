@@ -27,8 +27,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -54,11 +57,13 @@ public class MongoCustomerDbAdapter implements CustomerPort {
   }
 
   @Override
+  @Retryable(includes = {DataAccessResourceFailureException.class, TransientDataAccessException.class},
+      maxRetries = 2, delay = 100, multiplier = 2)
   public Optional<Customer> find(TenantId tenantId, CustomerId id) {
     var activeCustomerFilter = toActiveCustomerFilter(tenantId, id);
-    var doc = mongoTemplate.getCollection(COLLECTION)
+    var doc = mongoTemplate.execute(COLLECTION, collection -> collection
         .find(activeCustomerFilter)
-        .first();
+        .first());
 
     if (nonNull(doc)) {
       var customer = toDomain(doc);
@@ -69,23 +74,26 @@ public class MongoCustomerDbAdapter implements CustomerPort {
   }
 
   @Override
+  @Retryable(includes = {DataAccessResourceFailureException.class, TransientDataAccessException.class},
+      maxRetries = 2, delay = 100, multiplier = 2)
   public CustomerPage getPage(TenantId tenantId, PageRequest pageRequest) {
     var page = pageRequest.page();
     var size = pageRequest.size();
     var customersOfEarlierPages = (page - 1) * size;
     var activeCustomersOfTenantFilter = toActiveCustomersOfTenantFilter(tenantId);
     var byId = ascending(ID);
-    var collection = mongoTemplate.getCollection(COLLECTION);
     var customers = new ArrayList<Customer>();
 
-    collection.find(activeCustomersOfTenantFilter)
+    mongoTemplate.execute(COLLECTION, collection -> collection
+        .find(activeCustomersOfTenantFilter)
         .sort(byId)
         .skip(customersOfEarlierPages)
         .limit(size)
         .map(CustomerDocMapper::toDomain)
-        .into(customers);
+        .into(customers));
 
-    var totalElements = collection.countDocuments(activeCustomersOfTenantFilter);
+    var totalElements = mongoTemplate.execute(COLLECTION, collection -> collection
+        .countDocuments(activeCustomersOfTenantFilter));
 
     return CustomerPage.builder()
         .customers(customers)
@@ -104,8 +112,8 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     var activeCustomerFilter = toActiveCustomerFilter(tenantId, id);
     var updates = toUpdateBson(update);
     var returnUpdatedDoc = new FindOneAndUpdateOptions().returnDocument(AFTER);
-    var doc = mongoTemplate.getCollection(COLLECTION)
-        .findOneAndUpdate(activeCustomerFilter, updates, returnUpdatedDoc);
+    var doc = mongoTemplate.execute(COLLECTION, collection -> collection
+        .findOneAndUpdate(activeCustomerFilter, updates, returnUpdatedDoc));
 
     if (nonNull(doc)) {
       var customer = toDomain(doc);
@@ -121,7 +129,7 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     var now = clock.instant();
     var deletedAt = Date.from(now);
     var setDeletedAt = set(DELETED_AT, deletedAt);
-    mongoTemplate.getCollection(COLLECTION)
-        .updateOne(activeCustomerFilter, setDeletedAt);
+    mongoTemplate.execute(COLLECTION, collection -> collection
+        .updateOne(activeCustomerFilter, setDeletedAt));
   }
 }

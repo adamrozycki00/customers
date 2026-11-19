@@ -9,6 +9,7 @@ import com.example.customers.domain.genericfield.FieldName;
 import com.example.customers.domain.genericfield.FieldType;
 import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
+import com.example.customers.infrastructure.db.exception.CorruptDataException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,11 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -44,6 +48,8 @@ public class MongoGenericFieldRepository {
     return field;
   }
 
+  @Retryable(includes = {DataAccessResourceFailureException.class, TransientDataAccessException.class},
+      maxRetries = 2, delay = 100, multiplier = 2)
   public List<GenericField> findAllByTenant(TenantId tenantId) {
     var rawTenantId = tenantId.value();
     var lowestName = new MinKey();
@@ -58,6 +64,8 @@ public class MongoGenericFieldRepository {
     return findFields(tenantIdRangeFilter);
   }
 
+  @Retryable(includes = {DataAccessResourceFailureException.class, TransientDataAccessException.class},
+      maxRetries = 2, delay = 100, multiplier = 2)
   public List<GenericField> findAll() {
     var allFieldsFilter = new Document();
     return findFields(allFieldsFilter);
@@ -66,10 +74,10 @@ public class MongoGenericFieldRepository {
   private List<GenericField> findFields(Bson filter) {
     var fields = new ArrayList<GenericField>();
 
-    mongoTemplate.getCollection(COLLECTION)
+    mongoTemplate.execute(COLLECTION, collection -> collection
         .find(filter)
         .map(MongoGenericFieldRepository::toDomain)
-        .into(fields);
+        .into(fields));
 
     return fields;
   }
@@ -85,6 +93,15 @@ public class MongoGenericFieldRepository {
   }
 
   private static GenericField toDomain(Document doc) {
+    try {
+      return toGenericField(doc);
+    } catch (RuntimeException e) {
+      var docId = doc.get(ID);
+      throw new CorruptDataException("Corrupt generic field doc " + docId, e);
+    }
+  }
+
+  private static GenericField toGenericField(Document doc) {
     var id = doc.get(ID, Document.class);
     var rawTenantId = id.getString(TENANT_ID);
     var rawName = id.getString(NAME);

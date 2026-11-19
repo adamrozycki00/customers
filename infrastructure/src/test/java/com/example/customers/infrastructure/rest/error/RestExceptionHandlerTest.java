@@ -3,9 +3,11 @@ package com.example.customers.infrastructure.rest.error;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.http.HttpHeaders.RETRY_AFTER;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
@@ -119,6 +122,34 @@ class RestExceptionHandlerTest {
     assertThat(resultResponse).hasStatus(CONFLICT)
         .hasContentType(APPLICATION_PROBLEM_JSON)
         .bodyJson().isLenientlyEqualTo(expectedResponse);
+  }
+
+  @Test
+  void shouldReturnServiceUnavailableForUnavailableDatabase() {
+    var databaseUnavailable = new DataAccessResourceFailureException("Timed out: mongodb://secret-host");
+    given(registerGenericFieldUseCase.register(any())).willThrow(databaseUnavailable);
+    String inputRequest = """
+        {"name": "vip", "type": "BOOLEAN"}
+        """;
+    String expectedResponse = """
+        {
+          "status": 503,
+          "title": "Service Unavailable",
+          "detail": "Database temporarily unavailable"
+        }
+        """;
+
+    var resultResponse = mockMvc.post()
+        .uri("/generic-fields")
+        .header("X-Tenant-Id", "flowers")
+        .contentType(APPLICATION_JSON)
+        .content(inputRequest)
+        .exchange();
+
+    assertThat(resultResponse).hasStatus(SERVICE_UNAVAILABLE)
+        .hasContentType(APPLICATION_PROBLEM_JSON)
+        .bodyJson().isLenientlyEqualTo(expectedResponse);
+    assertThat(resultResponse).headers().hasValue(RETRY_AFTER, "5");
   }
 
   @Test

@@ -11,6 +11,9 @@ import com.example.customers.domain.genericfield.GenericField;
 import com.example.customers.domain.tenant.TenantId;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.MeterBinder;
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -21,10 +24,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CachingGenericFieldAdapter implements GenericFieldPort {
+public class CachingGenericFieldAdapter implements GenericFieldPort, MeterBinder {
+
+  private static final String CACHE_NAME = "genericFields";
 
   private final MongoGenericFieldRepository db;
-  private final Cache<TenantId, List<GenericField>> fieldsByTenant = Caffeine.newBuilder().build();
+  private final Cache<TenantId, List<GenericField>> fieldsByTenant = Caffeine.newBuilder()
+      .recordStats()
+      .build();
 
   @Override
   public GenericField insert(GenericField field) {
@@ -52,15 +59,17 @@ public class CachingGenericFieldAdapter implements GenericFieldPort {
     return reloadedFields;
   }
 
-  @Scheduled(
-      fixedRateString = "${customers.generic-fields.cache.refresh-interval-minutes}",
-      initialDelayString = "${customers.generic-fields.cache.refresh-interval-minutes}",
-      timeUnit = MINUTES)
+  @Scheduled(fixedRateString = "${customers.generic-fields.cache.refresh-interval-minutes}", timeUnit = MINUTES)
   public void refreshAll() {
     var fields = db.findAll();
     var fieldsByTenant = fields.stream()
         .collect(groupingBy(GenericField::getTenantId));
     this.fieldsByTenant.putAll(fieldsByTenant);
+  }
+
+  @Override
+  public void bindTo(MeterRegistry registry) {
+    CaffeineCacheMetrics.monitor(registry, fieldsByTenant, CACHE_NAME);
   }
 
   private static List<GenericField> withField(List<GenericField> fields, GenericField field) {

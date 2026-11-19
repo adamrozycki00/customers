@@ -18,3 +18,16 @@ customers:
   generic-fields:
     cache:
       refresh-interval-minutes: 30
+  mongodb:
+    timeout: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-components: always

@@ -15,6 +15,7 @@ import com.example.customers.domain.genericfield.value.GenericFieldValue;
 import com.example.customers.domain.genericfield.value.IntegerValue;
 import com.example.customers.domain.genericfield.value.StringValue;
 import com.example.customers.domain.tenant.TenantId;
+import com.example.customers.infrastructure.db.exception.CorruptDataException;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,6 +39,15 @@ final class CustomerDocMapper {
   }
 
   static Customer toDomain(Document doc) {
+    try {
+      return toCustomer(doc);
+    } catch (RuntimeException e) {
+      var docId = doc.get(ID);
+      throw new CorruptDataException("Corrupt customer doc " + docId, e);
+    }
+  }
+
+  private static Customer toCustomer(Document doc) {
     var idDoc = doc.get(ID, Document.class);
     var rawTenantId = idDoc.getString(TENANT_ID);
     var rawId = idDoc.getString(CUSTOMER_ID);
