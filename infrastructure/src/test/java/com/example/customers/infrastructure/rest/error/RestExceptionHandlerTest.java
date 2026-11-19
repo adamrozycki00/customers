@@ -42,7 +42,7 @@ class RestExceptionHandlerTest {
 
   @Test
   void shouldReturnBadRequestForValidationException() {
-    var invalidFieldType = new ValidationException("Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME");
+    var invalidFieldType = new ValidationException("Unknown field type; use one of BOOL, STRING, INTEGER, DATETIME");
     given(registerGenericFieldUseCase.register(any())).willThrow(invalidFieldType);
     String inputRequest = """
         {"name": "vip", "type": "DATE"}
@@ -50,8 +50,7 @@ class RestExceptionHandlerTest {
     String expectedResponse = """
         {
           "status": 400,
-          "title": "Bad Request",
-          "detail": "Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME"
+          "title": "Bad Request"
         }
         """;
 
@@ -74,13 +73,12 @@ class RestExceptionHandlerTest {
     var invalidGenericFieldValues = new InvalidGenericFieldValuesException(invalidFieldNames);
     given(registerGenericFieldUseCase.register(any())).willThrow(invalidGenericFieldValues);
     String inputRequest = """
-        {"name": "vip", "type": "BOOLEAN"}
+        {"name": "vip", "type": "BOOL"}
         """;
     String expectedResponse = """
         {
           "status": 400,
           "title": "Bad Request",
-          "detail": "Unregistered generic fields or values of the wrong type",
           "errors": ["vipp", "ghost"]
         }
         """;
@@ -102,13 +100,12 @@ class RestExceptionHandlerTest {
     var duplicateFieldName = new ConflictException("Generic field already registered");
     given(registerGenericFieldUseCase.register(any())).willThrow(duplicateFieldName);
     String inputRequest = """
-        {"name": "vip", "type": "BOOLEAN"}
+        {"name": "vip", "type": "BOOL"}
         """;
     String expectedResponse = """
         {
           "status": 409,
-          "title": "Conflict",
-          "detail": "Generic field already registered"
+          "title": "Conflict"
         }
         """;
 
@@ -129,13 +126,12 @@ class RestExceptionHandlerTest {
     var databaseUnavailable = new DataAccessResourceFailureException("Timed out: mongodb://secret-host");
     given(registerGenericFieldUseCase.register(any())).willThrow(databaseUnavailable);
     String inputRequest = """
-        {"name": "vip", "type": "BOOLEAN"}
+        {"name": "vip", "type": "BOOL"}
         """;
     String expectedResponse = """
         {
           "status": 503,
-          "title": "Service Unavailable",
-          "detail": "Database temporarily unavailable"
+          "title": "Service Unavailable"
         }
         """;
 
@@ -157,13 +153,12 @@ class RestExceptionHandlerTest {
     var unexpectedException = new RuntimeException("Connection refused: mongodb://secret-host");
     given(registerGenericFieldUseCase.register(any())).willThrow(unexpectedException);
     String inputRequest = """
-        {"name": "vip", "type": "BOOLEAN"}
+        {"name": "vip", "type": "BOOL"}
         """;
     String expectedResponse = """
         {
           "status": 500,
-          "title": "Internal Server Error",
-          "detail": "Unexpected error"
+          "title": "Internal Server Error"
         }
         """;
 
@@ -183,13 +178,12 @@ class RestExceptionHandlerTest {
   @Test
   void shouldReturnBadRequestForMissingTenantHeader() {
     String inputRequest = """
-        {"name": "vip", "type": "BOOLEAN"}
+        {"name": "vip", "type": "BOOL"}
         """;
     String expectedResponse = """
         {
           "status": 400,
-          "title": "Bad Request",
-          "detail": "Required header 'X-Tenant-Id' is not present."
+          "title": "Bad Request"
         }
         """;
 
@@ -212,17 +206,16 @@ class RestExceptionHandlerTest {
     var registeredField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
-        .type(FieldType.BOOLEAN)
+        .type(FieldType.BOOL)
         .build();
     given(registerGenericFieldUseCase.register(any())).willReturn(registeredField);
     String inputRequestWithUnknownProperty = """
-        {"name": "vip", "type": "BOOLEAN", "color": "gold"}
+        {"name": "vip", "type": "BOOL", "color": "gold"}
         """;
     String expectedResponse = """
         {
           "status": 400,
-          "title": "Bad Request",
-          "detail": "Failed to read request"
+          "title": "Bad Request"
         }
         """;
 

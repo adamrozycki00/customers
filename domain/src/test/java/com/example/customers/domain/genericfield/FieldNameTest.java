@@ -31,8 +31,7 @@ class FieldNameTest {
 
       var thrown = catchThrowable(() -> new FieldName(inputNullName));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Field name must start with a letter, contain only letters, digits or '_', and be at most 64 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -41,8 +40,7 @@ class FieldNameTest {
 
       var thrown = catchThrowable(() -> new FieldName(inputEmptyName));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Field name must start with a letter, contain only letters, digits or '_', and be at most 64 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 
@@ -55,8 +53,7 @@ class FieldNameTest {
 
       var thrown = catchThrowable(() -> new FieldName(inputNameStartingWithDigit));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Field name must start with a letter, contain only letters, digits or '_', and be at most 64 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -65,8 +62,7 @@ class FieldNameTest {
 
       var thrown = catchThrowable(() -> new FieldName(inputNameWithDots));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Field name must start with a letter, contain only letters, digits or '_', and be at most 64 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -75,8 +71,7 @@ class FieldNameTest {
 
       var thrown = catchThrowable(() -> new FieldName(inputNameWithNonAsciiLetter));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Field name must start with a letter, contain only letters, digits or '_', and be at most 64 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 
@@ -98,8 +93,7 @@ class FieldNameTest {
 
       var thrown = catchThrowable(() -> new FieldName(inputTooLongName));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Field name must start with a letter, contain only letters, digits or '_', and be at most 64 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 

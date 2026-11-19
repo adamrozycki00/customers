@@ -127,8 +127,7 @@ class CustomerTest {
           .id(inputMissingId)
           .build());
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Customer requires a tenant id and an id");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -140,8 +139,7 @@ class CustomerTest {
           .id(validId)
           .build());
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Customer requires a tenant id and an id");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 }

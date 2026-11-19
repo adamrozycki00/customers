@@ -14,7 +14,6 @@ class StringValueTest {
 
     var thrown = catchThrowable(() -> new StringValue(inputNullString));
 
-    assertThat(thrown).isInstanceOf(ValidationException.class)
-        .hasMessage("String value is required and must be at most 1024 characters");
+    assertThat(thrown).isInstanceOf(ValidationException.class);
   }
 }

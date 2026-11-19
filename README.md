@@ -25,7 +25,7 @@ The application listens on `http://localhost:8080`. Stopping it (Ctrl+C) also st
 ```shell
 # Register a generic field for tenant "flowers"
 curl -X POST localhost:8080/generic-fields -H 'X-Tenant-Id: flowers' -H 'Content-Type: application/json' \
-  -d '{"name": "vip", "type": "BOOLEAN"}'
+  -d '{"name": "vip", "type": "BOOL"}'
 
 # Create a customer with a value for it
 curl -X POST localhost:8080/customers -H 'X-Tenant-Id: flowers' -H 'Content-Type: application/json' \

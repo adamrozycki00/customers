@@ -13,6 +13,7 @@ import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
+import static com.mongodb.client.model.Filters.ne;
 import static com.mongodb.client.model.Updates.combine;
 import static com.mongodb.client.model.Updates.set;
 import static com.mongodb.client.model.Updates.unset;
@@ -40,6 +41,7 @@ import org.bson.types.MinKey;
 final class CustomerDbHelper {
 
   private static final Bson NOT_DELETED_FILTER = eq(DELETED_AT, null);
+  private static final Bson DELETED_FILTER = ne(DELETED_AT, null);
 
   static boolean hasNoUpdates(CustomerUpdate update) {
     return update.firstName() instanceof FieldUpdate.Keep<FirstName>
@@ -87,14 +89,23 @@ final class CustomerDbHelper {
   }
 
   static Bson toActiveCustomerFilter(TenantId tenantId, CustomerId id) {
-    var idDoc = toId(tenantId, id);
-    var idFilter = eq(ID, idDoc);
+    var idFilter = toIdFilter(tenantId, id);
     return and(idFilter, NOT_DELETED_FILTER);
+  }
+
+  static Bson toDeletedCustomerFilter(TenantId tenantId, CustomerId id) {
+    var idFilter = toIdFilter(tenantId, id);
+    return and(idFilter, DELETED_FILTER);
   }
 
   static Bson toActiveCustomersOfTenantFilter(TenantId tenantId) {
     var tenantIdRangeFilter = toTenantIdRangeFilter(tenantId);
     return and(tenantIdRangeFilter, NOT_DELETED_FILTER);
+  }
+
+  private static Bson toIdFilter(TenantId tenantId, CustomerId id) {
+    var idDoc = toId(tenantId, id);
+    return eq(ID, idDoc);
   }
 
   private static Bson toTenantIdRangeFilter(TenantId tenantId) {

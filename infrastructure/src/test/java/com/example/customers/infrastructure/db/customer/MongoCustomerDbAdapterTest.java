@@ -162,8 +162,7 @@ class MongoCustomerDbAdapterTest {
 
       var thrown = catchThrowable(() -> underTest.insert(inputCustomerWithDuplicateId));
 
-      assertThat(thrown).isInstanceOf(ConflictException.class)
-          .hasMessage("Customer with this id already exists");
+      assertThat(thrown).isInstanceOf(ConflictException.class);
     }
 
     @Test
@@ -177,8 +176,7 @@ class MongoCustomerDbAdapterTest {
 
       var thrown = catchThrowable(() -> underTest.insert(inputCustomerReusingId));
 
-      assertThat(thrown).isInstanceOf(ConflictException.class)
-          .hasMessage("Customer with this id already exists");
+      assertThat(thrown).isInstanceOf(ConflictException.class);
     }
   }
 

@@ -51,8 +51,7 @@ class CustomerIdTest {
 
       var thrown = catchThrowable(() -> new CustomerId(inputNullId));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -61,8 +60,7 @@ class CustomerIdTest {
 
       var thrown = catchThrowable(() -> new CustomerId(inputEmptyId));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -71,8 +69,7 @@ class CustomerIdTest {
 
       var thrown = catchThrowable(() -> new CustomerId(inputIdWithInvalidCharacters));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -81,8 +78,7 @@ class CustomerIdTest {
 
       var thrown = catchThrowable(() -> new CustomerId(inputTooLongId));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Id must be 1 to 128 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 }

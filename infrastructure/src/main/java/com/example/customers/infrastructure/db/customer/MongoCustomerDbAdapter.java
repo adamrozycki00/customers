@@ -3,6 +3,7 @@ package com.example.customers.infrastructure.db.customer;
 import static com.example.customers.infrastructure.db.customer.CustomerDbHelper.hasNoUpdates;
 import static com.example.customers.infrastructure.db.customer.CustomerDbHelper.toActiveCustomerFilter;
 import static com.example.customers.infrastructure.db.customer.CustomerDbHelper.toActiveCustomersOfTenantFilter;
+import static com.example.customers.infrastructure.db.customer.CustomerDbHelper.toDeletedCustomerFilter;
 import static com.example.customers.infrastructure.db.customer.CustomerDbHelper.toUpdateBson;
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.DELETED_AT;
 import static com.example.customers.infrastructure.db.customer.CustomerDocMapper.ID;
@@ -50,6 +51,16 @@ public class MongoCustomerDbAdapter implements CustomerPort {
     try {
       mongoTemplate.insert(doc, COLLECTION);
     } catch (DuplicateKeyException e) {
+      var tenantId = customer.getTenantId();
+      var id = customer.getId();
+      var deletedCustomerFilter = toDeletedCustomerFilter(tenantId, id);
+      var deletedCustomerCount = mongoTemplate.execute(COLLECTION, collection -> collection
+          .countDocuments(deletedCustomerFilter));
+
+      if (deletedCustomerCount > 0) {
+        throw new ConflictException("Customer with this id was deleted; ids of deleted customers cannot be reused");
+      }
+
       throw new ConflictException("Customer with this id already exists");
     }
 

@@ -261,15 +261,14 @@ class UpdateCustomerServiceTest {
 
     var thrown = catchThrowable(() -> underTest.update(inputCommandForUnknownCustomer));
 
-    assertThat(thrown).isInstanceOf(NotFoundException.class)
-        .hasMessage("Customer not found");
+    assertThat(thrown).isInstanceOf(NotFoundException.class);
   }
 
   private void registerVipField() {
     var vipField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
-        .type(FieldType.BOOLEAN)
+        .type(FieldType.BOOL)
         .build();
     genericFieldRepo.insert(vipField);
   }

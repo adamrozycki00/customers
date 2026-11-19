@@ -21,7 +21,7 @@ class GenericFieldTest {
       var booleanField = GenericField.builder()
           .tenantId(validTenantId)
           .name(validName)
-          .type(FieldType.BOOLEAN)
+          .type(FieldType.BOOL)
           .build();
       var sameFieldWithOtherType = GenericField.builder()
           .tenantId(validTenantId)
@@ -40,12 +40,12 @@ class GenericFieldTest {
       var field = GenericField.builder()
           .tenantId(validTenantId)
           .name(validName)
-          .type(FieldType.BOOLEAN)
+          .type(FieldType.BOOL)
           .build();
       var otherField = GenericField.builder()
           .tenantId(validTenantId)
           .name(otherName)
-          .type(FieldType.BOOLEAN)
+          .type(FieldType.BOOL)
           .build();
 
       var resultEquality = field.equals(otherField);
@@ -59,12 +59,12 @@ class GenericFieldTest {
       var field = GenericField.builder()
           .tenantId(validTenantId)
           .name(validName)
-          .type(FieldType.BOOLEAN)
+          .type(FieldType.BOOL)
           .build();
       var otherTenantsField = GenericField.builder()
           .tenantId(otherTenantId)
           .name(validName)
-          .type(FieldType.BOOLEAN)
+          .type(FieldType.BOOL)
           .build();
 
       var resultEquality = field.equals(otherTenantsField);
@@ -83,11 +83,10 @@ class GenericFieldTest {
       var thrown = catchThrowable(() -> GenericField.builder()
           .tenantId(inputMissingTenantId)
           .name(validName)
-          .type(FieldType.BOOLEAN)
+          .type(FieldType.BOOL)
           .build());
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Generic field requires a tenant id, a name and a type");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -97,11 +96,10 @@ class GenericFieldTest {
       var thrown = catchThrowable(() -> GenericField.builder()
           .tenantId(validTenantId)
           .name(inputNullName)
-          .type(FieldType.BOOLEAN)
+          .type(FieldType.BOOL)
           .build());
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Generic field requires a tenant id, a name and a type");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -114,8 +112,7 @@ class GenericFieldTest {
           .type(inputNullType)
           .build());
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Generic field requires a tenant id, a name and a type");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 }

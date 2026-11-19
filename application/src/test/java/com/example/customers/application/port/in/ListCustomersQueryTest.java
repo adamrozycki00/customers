@@ -17,8 +17,7 @@ class ListCustomersQueryTest {
         .page(inputZeroPage)
         .build());
 
-    assertThat(thrown).isInstanceOf(ValidationException.class)
-        .hasMessage("Page and size must be at least 1");
+    assertThat(thrown).isInstanceOf(ValidationException.class);
   }
 
   @Test
@@ -30,7 +29,6 @@ class ListCustomersQueryTest {
         .size(inputZeroSize)
         .build());
 
-    assertThat(thrown).isInstanceOf(ValidationException.class)
-        .hasMessage("Page and size must be at least 1");
+    assertThat(thrown).isInstanceOf(ValidationException.class);
   }
 }

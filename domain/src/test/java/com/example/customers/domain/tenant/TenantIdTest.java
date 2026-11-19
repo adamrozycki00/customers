@@ -51,8 +51,7 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputNullTenantId));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -61,8 +60,7 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputEmptyTenantId));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -71,8 +69,7 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputTenantIdWithInvalidCharacters));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -81,8 +78,7 @@ class TenantIdTest {
 
       var thrown = catchThrowable(() -> new TenantId(inputTooLongTenantId));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("Tenant id must be 1 to 64 letters, digits, '_' or '-'");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 }

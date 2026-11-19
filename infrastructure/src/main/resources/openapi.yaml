@@ -227,7 +227,7 @@ components:
           example: 400
         detail:
           type: string
-          example: Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME
+          example: Unknown field type; use one of BOOL, STRING, INTEGER, DATETIME
         instance:
           type: string
           example: /generic-fields
@@ -251,8 +251,8 @@ components:
           example: vip
         type:
           type: string
-          description: One of `BOOLEAN`, `STRING`, `INTEGER`, `DATETIME` (case-insensitive).
-          example: BOOLEAN
+          description: One of `BOOL`, `STRING`, `INTEGER`, `DATETIME` (case-insensitive).
+          example: BOOL
 
     GenericFieldResponse:
       type: object
@@ -265,7 +265,7 @@ components:
           example: vip
         type:
           type: string
-          example: BOOLEAN
+          example: BOOL
 
     CreateCustomerRequest:
       type: object

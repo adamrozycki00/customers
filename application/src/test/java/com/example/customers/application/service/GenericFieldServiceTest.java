@@ -25,14 +25,14 @@ class GenericFieldServiceTest {
     var inputCommand = Command.builder()
         .tenantId("flowers")
         .name("vip")
-        .type("BOOLEAN")
+        .type("BOOL")
         .build();
     var expectedTenantId = new TenantId("flowers");
     var expectedName = new FieldName("vip");
     var expectedField = GenericField.builder()
         .tenantId(expectedTenantId)
         .name(expectedName)
-        .type(FieldType.BOOLEAN)
+        .type(FieldType.BOOL)
         .build();
 
     var resultField = underTest.register(inputCommand);
@@ -45,7 +45,7 @@ class GenericFieldServiceTest {
     var inputCommand = Command.builder()
         .tenantId("flowers")
         .name("vip")
-        .type("BOOLEAN")
+        .type("BOOL")
         .build();
     var tenantId = new TenantId("flowers");
     var expectedName = new FieldName("vip");

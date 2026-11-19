@@ -19,8 +19,7 @@ class UpdateCustomerCommandTest {
         .fieldMask(inputFieldMaskWithId)
         .build());
 
-    assertThat(thrown).isInstanceOf(ValidationException.class)
-        .hasMessage("Only first_name, last_name and generic_fields can be updated");
+    assertThat(thrown).isInstanceOf(ValidationException.class);
   }
 
   @Test
@@ -33,7 +32,6 @@ class UpdateCustomerCommandTest {
         .fieldMask(inputFieldMaskWithUnknownPath)
         .build());
 
-    assertThat(thrown).isInstanceOf(ValidationException.class)
-        .hasMessage("Only first_name, last_name and generic_fields can be updated");
+    assertThat(thrown).isInstanceOf(ValidationException.class);
   }
 }

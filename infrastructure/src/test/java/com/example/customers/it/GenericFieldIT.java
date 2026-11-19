@@ -34,10 +34,10 @@ class GenericFieldIT {
   @Test
   void shouldRegisterGenericField() {
     String inputRequest = """
-        {"name": "vip", "type": "BOOLEAN"}
+        {"name": "vip", "type": "BOOL"}
         """;
     String expectedResponse = """
-        {"name": "vip", "type": "BOOLEAN"}
+        {"name": "vip", "type": "BOOL"}
         """;
 
     var resultResponse = restTestClient.post()

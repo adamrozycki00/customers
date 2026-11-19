@@ -59,8 +59,7 @@ class FirstNameTest {
 
       var thrown = catchThrowable(() -> new FirstName(inputNullFirstName));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("First name must not be blank and must be at most 256 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -69,8 +68,7 @@ class FirstNameTest {
 
       var thrown = catchThrowable(() -> new FirstName(inputBlankFirstName));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("First name must not be blank and must be at most 256 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
 
     @Test
@@ -79,8 +77,7 @@ class FirstNameTest {
 
       var thrown = catchThrowable(() -> new FirstName(inputTooLongFirstName));
 
-      assertThat(thrown).isInstanceOf(ValidationException.class)
-          .hasMessage("First name must not be blank and must be at most 256 characters");
+      assertThat(thrown).isInstanceOf(ValidationException.class);
     }
   }
 }

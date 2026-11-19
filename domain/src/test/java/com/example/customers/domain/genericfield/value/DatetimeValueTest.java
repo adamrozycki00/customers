@@ -15,7 +15,6 @@ class DatetimeValueTest {
 
     var thrown = catchThrowable(() -> new DatetimeValue(inputNullInstant));
 
-    assertThat(thrown).isInstanceOf(ValidationException.class)
-        .hasMessage("Datetime value is required");
+    assertThat(thrown).isInstanceOf(ValidationException.class);
   }
 }

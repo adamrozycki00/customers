@@ -18,7 +18,7 @@ class TenantGenericFieldsTest {
   private final GenericField registeredField = GenericField.builder()
       .tenantId(tenantId)
       .name(registeredFieldName)
-      .type(FieldType.BOOLEAN)
+      .type(FieldType.BOOL)
       .build();
   private final List<GenericField> registeredFields = List.of(registeredField);
   private final TenantGenericFields tenantGenericFields = TenantGenericFields.of(registeredFields);

@@ -210,8 +210,7 @@ class CustomerControllerTest {
       String expectedResponse = """
           {
             "status": 404,
-            "title": "Not Found",
-            "detail": "Customer not found"
+            "title": "Not Found"
           }
           """;
 

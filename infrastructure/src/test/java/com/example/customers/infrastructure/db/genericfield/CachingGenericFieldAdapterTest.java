@@ -33,7 +33,7 @@ class CachingGenericFieldAdapterTest {
   private final GenericField vipField = GenericField.builder()
       .tenantId(tenantId)
       .name(vipName)
-      .type(FieldType.BOOLEAN)
+      .type(FieldType.BOOL)
       .build();
   private final FieldName scoreName = new FieldName("score");
   private final GenericField scoreField = GenericField.builder()

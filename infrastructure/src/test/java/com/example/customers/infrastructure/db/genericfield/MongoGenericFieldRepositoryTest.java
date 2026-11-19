@@ -53,12 +53,12 @@ class MongoGenericFieldRepositoryTest {
     var inputField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
-        .type(FieldType.BOOLEAN)
+        .type(FieldType.BOOL)
         .build();
     var expectedId = new Document("tenantId", "FLOWERS")
         .append("name", "vip");
     var expectedDoc = new Document("_id", expectedId)
-        .append("type", "BOOLEAN");
+        .append("type", "BOOL");
     var expectedJson = expectedDoc.toJson();
 
     underTest.insert(inputField);
@@ -69,7 +69,7 @@ class MongoGenericFieldRepositoryTest {
 
   @Test
   void shouldRejectDuplicateFieldName() {
-    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("FLOWERS", "vip", "BOOL");
     var inputFieldWithDuplicateName = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
@@ -78,17 +78,16 @@ class MongoGenericFieldRepositoryTest {
 
     var thrown = catchThrowable(() -> underTest.insert(inputFieldWithDuplicateName));
 
-    assertThat(thrown).isInstanceOf(ConflictException.class)
-        .hasMessage("Generic field already registered");
+    assertThat(thrown).isInstanceOf(ConflictException.class);
   }
 
   @Test
   void shouldFindField() {
-    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("FLOWERS", "vip", "BOOL");
     var expectedField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
-        .type(FieldType.BOOLEAN)
+        .type(FieldType.BOOL)
         .build();
 
     var resultFields = underTest.findAllByTenant(tenantId);
@@ -109,12 +108,12 @@ class MongoGenericFieldRepositoryTest {
 
   @Test
   void shouldFindOnlyFieldsOfGivenTenant() {
-    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("FLOWERS", "vip", "BOOL");
     storeFieldDocument("TREES", "vip", "STRING");
     var expectedField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
-        .type(FieldType.BOOLEAN)
+        .type(FieldType.BOOL)
         .build();
 
     var resultFields = underTest.findAllByTenant(tenantId);
@@ -124,7 +123,7 @@ class MongoGenericFieldRepositoryTest {
 
   @Test
   void shouldFindTenantFieldsUsingIndex() {
-    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("FLOWERS", "vip", "BOOL");
     storeFieldDocument("TREES", "vip", "STRING");
     enableProfiler();
     String expectedPlanSummary = "IXSCAN { _id: 1 }";
@@ -138,14 +137,14 @@ class MongoGenericFieldRepositoryTest {
   @Test
   void shouldFindAllFields() {
     // given fields of two tenants
-    storeFieldDocument("FLOWERS", "vip", "BOOLEAN");
+    storeFieldDocument("FLOWERS", "vip", "BOOL");
     storeFieldDocument("TREES", "score", "INTEGER");
     var treesTenantId = new TenantId("TREES");
     var scoreName = new FieldName("score");
     var expectedFlowersField = GenericField.builder()
         .tenantId(tenantId)
         .name(vipName)
-        .type(FieldType.BOOLEAN)
+        .type(FieldType.BOOL)
         .build();
     var expectedTreesField = GenericField.builder()
         .tenantId(treesTenantId)

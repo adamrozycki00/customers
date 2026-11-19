@@ -17,12 +17,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public enum FieldType {
-  BOOLEAN,
+  BOOL,
   STRING,
   INTEGER,
   DATETIME;
 
-  private static final String UNKNOWN_FIELD_TYPE = "Unknown field type; use one of BOOLEAN, STRING, INTEGER, DATETIME";
+  private static final String UNKNOWN_FIELD_TYPE = "Unknown field type; use one of BOOL, STRING, INTEGER, DATETIME";
   private static final DateTimeFormatter ISO_DATETIME_DEFAULTING_TO_UTC = ISO_DATE_TIME.withZone(UTC);
 
   public static FieldType of(String rawType) {
@@ -33,7 +33,7 @@ public enum FieldType {
 
   public GenericFieldValue parse(Object rawValue) {
     return switch (this) {
-      case BOOLEAN -> parseBoolean(rawValue);
+      case BOOL -> parseBoolean(rawValue);
       case STRING -> parseString(rawValue);
       case INTEGER -> parseInteger(rawValue);
       case DATETIME -> parseDatetime(rawValue);

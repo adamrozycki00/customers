@@ -37,7 +37,7 @@ class CustomerIT {
   @Test
   void shouldCreateAndGetCustomer() {
     // given registered vip, score and since fields, and a customer created with values for them
-    registerGenericField("vip", "BOOLEAN");
+    registerGenericField("vip", "BOOL");
     registerGenericField("score", "INTEGER");
     registerGenericField("since", "DATETIME");
     String inputCreateRequest = """
