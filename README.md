@@ -71,48 +71,33 @@ Errors are returned as RFC 9457 Problem Details (`application/problem+json`).
 
 ## Assumptions
 
-### Data and storage
+The premises the design rests on. If one of them stops being true, the part of the design named after its arrow needs revisiting.
 
-1. MongoDB is used as a DB technology. Two reasons: flexible customer schema, straightforward atomic partial update.
-2. Field names are case-sensitive, because tenants author these names and expect them preserved verbatim. They are limited to `[A-Za-z][A-Za-z0-9_]*` characters and at most 64 characters, so the example "date of birth" is registered as e.g. `date_of_birth`.
-3. Customer index `_id` in the DB is composed of the `tenantId` and `id` fields, always in that key order. The customer id is unique per tenant, case-sensitive (`CUST-1` and `cust-1` are different customers), limited to `[A-Za-z0-9_-]` characters and at most 128 characters, and permanent (not reusable after deletion).
-4. Generic field values are stored in a nested `genericFields` sub-document (left out when a customer is created without any; after the last value is cleared by PATCH, an empty sub-document may remain, which reads the same as a missing one), so tenant-defined names can never collide with the customer's own fields. All generic field values are optional.
-5. For concurrency and backward-compatibility reasons, once a field definition is registered, it cannot be modified (renamed, retyped, or deleted). Each field definition is its own document with `_id` composed of `tenantId` and `name` (in that key order), so a duplicate name is rejected by the DB with 409.
-6. Supported field types are boolean, string, integer and ISO-8601 datetime. Integers are 64-bit. String values are at most 1024 characters, and first and last names at most 256. A name, when present, must not be empty or blank; to have no name, the field is left out when the customer is created. Once a name is set, it cannot be removed, only replaced. Leading and trailing whitespace is removed from names; whitespace inside a name is kept.
-7. For consistent date storage, API fields of type ISO-8601 datetime are stored in Mongo as Date type, i.e. as a UTC instant. Type conversion is handled by the application logic. A value without an offset is interpreted as UTC (`Z`). The original offset is not preserved, precision is truncated to milliseconds, and a date-only value given with a non-UTC offset may land on a different calendar day in UTC (e.g. `1990-05-20T00:00:00+02:00` is stored as `1990-05-19T22:00:00Z`).
-8. The number of generic fields per tenant is not capped, but is assumed to stay small, because people register them by hand. Expected volume: at most 100 tenants with about 10 generic fields each on average, i.e. about 1,000 small field definitions in total, so keeping all of them in memory (see 9) is not a problem.
-9. Expected a small number of tenants and a small number of register_field requests; expected a large number of customers and therefore possibly large number of overall customer modification requests, but a small number of modification requests targetting a given customer. Generic field definitions are therefore cached in memory (Caffeine), with no size limit and no expiry: all of them are loaded in the background right after startup (startup does not wait for the DB), and the whole cache is refreshed on a schedule (`customers.generic-fields.cache.refresh-interval-minutes`, 30 by default). Until the first load succeeds, each tenant's fields are loaded on first use. A tenant without any fields is never cached, so the cache only holds real tenants. Because field definitions are insert-only, a cached copy can only be missing a newly registered field, never be wrong: when a request uses a field name the cached copy does not have, the tenant's fields are reloaded from the DB first, and only a name that is still missing is rejected with 400. A field registered on this instance is added to the cache immediately.
+### Domain
 
+1. Tenants are created and managed outside this service, which knows a tenant only by its id. The tenant id the caller sends is trusted, because authentication and authorization happen upstream. Tenant ids are case-insensitive (`flowers` and `FLOWERS` are one tenant).
+   → no `Tenant` aggregate; tenant id in a header.
+2. The customer id is the customer's only identity. It never changes, is never reused (not even after deletion), is case-sensitive, and is a URL-safe code (letters, digits, `_`, `-`, at most 128 characters).
+   → `{tenantId, id}` as the MongoDB `_id`; uniqueness enforced by the database, no surrogate key.
+3. Deleting a customer must stay traceable. Erasing personal data (e.g. for GDPR) is a separate concern, not the regular delete.
+   → soft delete.
+4. A generic field, once registered, is never renamed, retyped or deleted.
+   → no transaction between fields and customers; a cached copy of a tenant's fields can only be missing a field, never be wrong.
 
-### API behaviour
+### Usage and load
 
-10. Tenant ID is passed in the `X-Tenant-Id` header rather than as part of the path, as there is no requirement that tenants are RESTful resources. A missing or blank header is rejected with 400. The tenant id is case-insensitive: it is upper-cased on input and stored upper-cased, so `flowers` and `FLOWERS` are the same tenant. The header is trusted, because authorization is out of scope.
-11. Different HTTP methods are used for customer creation (POST) and updating (PATCH), in order to take advantage of unique inserts in Mongo. A duplicate id gets 409.
-12. PATCH (`application/json`) changes only what the request mentions. Only generic field values can be cleared; names can only be replaced or kept, and the id cannot be changed. `first_name` and `last_name` are replaced when present and kept when absent or `null`. Inside `generic_fields`, a value sets the field, `null` clears it, and an absent key keeps it; `generic_fields` itself absent or `null` keeps all generic fields. Request bodies are strict: an unknown property (including `id` in a PATCH) is rejected with 400.
-13. A generic field value whose name is not registered for the tenant, or whose type does not match, is rejected with 400. Nothing is dropped silently.
-14. The regular delete semantics for customers is soft deletion (a `deletedAt` timestamp, set on the first deletion only), for better traceability. GDPR-related hard deletion should be handled independently of the regular delete use case. POST requests with a soft-deleted id get 409. GET and PATCH on a soft-deleted customer get 404, and soft-deleted customers are excluded from listings. DELETE is idempotent and always returns 204, including for a customer that never existed.
-15. Listing uses offset pagination with 1-based page numbers (`page` default 1, `size` default 20, max 100), ordered by id. The default and maximum page sizes are configurable in `application.yaml` (`customers.paging.default-page-size`, `customers.paging.max-page-size`).
+5. There are few tenants (up to 100) with few fields each (10 on average). There are many customers and many writes in total, but few per customer.
+   → all field definitions are cached in memory without a size limit; customers are not cached.
+6. Concurrent updates of the same customer are rare.
+   → no optimistic locking; per-field atomic PATCH, last write wins per field.
+7. Customers are only read by id or listed page by page in id order. Nobody searches or sorts by generic field values, and soft-deleted customers stay a small share of a tenant's customers.
+   → no indexes on generic field values or the soft-delete marker; listing is a range scan on `_id`.
 
-### Concurrency
+### Operation
 
-16. Each generic field is stored as its own document with a unique `_id` of `{tenantId, name}`, and is only ever inserted, never updated. A duplicate field name is therefore rejected by the database (409), even under concurrent registrations.
-17. Customer updates are not optimistically locked. Each PATCH updates fields atomically, and concurrent writes to the same field resolve as last-write-wins.
-
-### Resilience
-
-18. Every MongoDB operation has a single time limit of 2 seconds (`customers.mongodb.timeout`), covering finding a server, connecting and the query itself, so no request waits on the database indefinitely.
-19. Reads are retried up to 2 times (after 100 ms, then 200 ms) when the database is unreachable, times out or reports a transient error, so a read gives up after about 6.3 seconds. Writes are not retried by the application, because retrying an insert whose first attempt actually succeeded would report a false 409; the MongoDB driver already retries a failed write once, safely.
-20. When the database is unreachable, times out or reports a transient error, the response is 503 with `Retry-After: 5` and a generic detail. Any other unexpected error is 500 with a generic detail. The details are only logged, never returned.
-21. A stored document that cannot be read (corrupt data) gets 500, not 400, because it is not the client's fault. A corrupt generic field definition makes the scheduled cache refresh fail; the failure is logged and the cache keeps its entries.
-22. The application starts without MongoDB. While the database is down, requests get 503, and the cache fills once the database is back.
-23. Monitoring uses Spring Boot Actuator on the application port: `/actuator/health` (with a MongoDB component), `/actuator/health/liveness`, `/actuator/health/readiness`, `/actuator/info` and `/actuator/metrics` (including MongoDB command and connection-pool metrics, and the generic field cache as `cache.*` with `cache=genericFields`). Readiness does not depend on MongoDB, so a database outage shows up as 503 responses rather than as the instance being taken out of the load balancer. The endpoints are not secured (authorization is out of scope), so they must not be exposed publicly.
-
-### Logging
-
-24. Each API request gets one INFO line: method, path with query string, the `X-Tenant-Id` header as sent, status and duration (e.g. `GET /customers/C-1 tenant=flowers -> 404 (2 ms)`). `/actuator/**` requests are not logged. Request and response bodies are never logged, so customer names and generic field values never appear in the logs; customer ids appear only as part of the path.
-25. The generic field cache logs at INFO when it is refreshed (number of fields and tenants, duration), when a tenant's fields are loaded from the DB, and when a field is registered. A failed refresh is a one-line WARN when the DB is unavailable (the cache keeps its entries), and an ERROR with a stack trace for anything else, such as corrupt data.
-26. A 503 (DB unavailable) is logged as one WARN line with the cause, without a stack trace; any other unexpected error is logged at ERROR with a stack trace. Client errors (400, 404, 409) appear only in the request line. During a DB outage, Spring Boot's MongoDB health check would log a full stack trace on every health probe, so its logger is set to ERROR (`application.yaml`); health still reports `mongo: DOWN`, and the MongoDB driver logs once when it cannot connect. To see every MongoDB command, start the application with `--logging.level.org.mongodb.driver.protocol.command=DEBUG`.
-
-### Structure
-
-27. The code follows Domain-Driven Design and is split into three Maven modules: `domain` (no framework dependencies), `application` (use cases) and `infrastructure` (MongoDB and REST adapters).
+8. The service runs as several instances, each with its own generic field cache.
+   → the field cache reloads a tenant when a request names a field it does not know.
+9. MongoDB outages are short. During one, the service should stay up and answer 503, not be restarted or taken out of the load balancer.
+   → no DB check at startup or in readiness; reads retried briefly.
+10. Customer names and generic field values are personal data and must not be logged. Tenant ids and customer ids may be logged.
+    → request logs hold only method, path, tenant, status and duration, never bodies.
